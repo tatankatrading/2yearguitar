@@ -11,6 +11,801 @@
             box-sizing: border-box;
         }
 
+        // Final validation and app health check
+        function performHealthCheck() {
+            const healthReport = {
+                localStorage: false,
+                audioContext: false,
+                weekData: false,
+                navigation: false,
+                timers: false
+            };
+            
+            try {
+                // Check localStorage
+                localStorage.setItem('healthCheck', 'test');
+                localStorage.removeItem('healthCheck');
+                healthReport.localStorage = true;
+            } catch (e) {
+                console.warn('localStorage not available');
+            }
+            
+            try {
+                // Check Web Audio API
+                const testContext = new (window.AudioContext || window.webkitAudioContext)();
+                testContext.close();
+                healthReport.audioContext = true;
+            } catch (e) {
+                console.warn('Web Audio API not available');
+            }
+            
+            // Check essential data structures
+            healthReport.weekData = typeof weekData === 'object' && Object.keys(weekData).length > 0;
+            healthReport.navigation = typeof showWeek === 'function' && typeof showOverview === 'function';
+            healthReport.timers = typeof PracticeTimer === 'function';
+            
+            const allSystemsGo = Object.values(healthReport).every(status => status === true);
+            
+            if (!allSystemsGo) {
+                console.warn('Some features may not work properly:', healthReport);
+                showMessage('Some features may not work properly. Try refreshing the page.', 'error');
+            }
+            
+            return healthReport;
+        }
+
+        // Enhanced error boundary for the entire app
+        window.addEventListener('error', function(event) {
+            console.error('Global error:', event.error);
+            showMessage('An error occurred. Some features may not work properly.', 'error');
+        });
+
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+        });
+
+        // Ensure all critical functions exist with fallbacks
+        function ensureCoreFunctions() {
+            const coreFunctions = [
+                'showWeek', 'showOverview', 'completeWeek', 'goToCurrentWeek',
+                'updateProgress', 'toggleSidebar', 'togglePhase', 'clearFilters',
+                'showProgressStats', 'showPracticeLog', 'exportProgress', 'importProgress',
+                'showGoalSetting', 'showTroubleshooting', 'toggleDarkMode'
+            ];
+            
+            coreFunctions.forEach(funcName => {
+                if (typeof window[funcName] !== 'function') {
+                    console.warn(`Missing function: ${funcName}`);
+                    // Create a stub function that shows an error
+                    window[funcName] = function() {
+                        showMessage(`Feature "${funcName}" is temporarily unavailable.`, 'error');
+                    };
+                }
+            });
+        }
+
+        // Add service worker registration for PWA
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                // For GitHub Pages, we'll create a simple service worker inline
+                const swCode = `
+                    const CACHE_NAME = 'guitar-curriculum-v1';
+                    const urlsToCache = [
+                        './',
+                        './index.html'
+                    ];
+                    
+                    self.addEventListener('install', function(event) {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then(function(cache) {
+                                    return cache.addAll(urlsToCache);
+                                })
+                        );
+                    });
+                    
+                    self.addEventListener('fetch', function(event) {
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then(function(response) {
+                                    return response || fetch(event.request);
+                                }
+                            )
+                        );
+                    });
+                `;
+                
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                
+                navigator.serviceWorker.register(swUrl)
+                    .then(registration => {
+                        console.log('SW registered:', registration);
+                    })
+                    .catch(error => {
+                        console.log('SW registration failed:', error);
+                    });
+            }
+        }
+
+        // Add web app manifest support
+        function addWebAppManifest() {
+            const manifest = {
+                name: "Guitar Curriculum - 2 Year Learning Path",
+                short_name: "Guitar Curriculum",
+                description: "Complete 2-year guitar learning curriculum with blues/rock focus",
+                start_url: "./",
+                display: "standalone",
+                background_color: "#2c3e50",
+                theme_color: "#3498db",
+                icons: [
+                    {
+                        src: "data:image/svg+xml;base64," + btoa(`
+                            <svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+                                <rect width="192" height="192" fill="#3498db"/>
+                                <text x="96" y="120" font-size="100" text-anchor="middle" fill="white">🎸</text>
+                            </svg>
+                        `),
+                        sizes: "192x192",
+                        type: "image/svg+xml"
+                    }
+                ]
+            };
+            
+            const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+            const manifestUrl = URL.createObjectURL(manifestBlob);
+            
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = manifestUrl;
+            document.head.appendChild(link);
+        }
+
+        // Initialize everything with comprehensive error handling
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                console.log('🎸 Guitar Curriculum App Starting...');
+                
+                // Initialize core variables first
+                initializeCoreVariables();
+                
+                // Ensure core functions exist
+                ensureCoreFunctions();
+                
+                // Set start date if not already set
+                if (!safeLocalStorageGet('startDate')) {
+                    safeLocalStorageSet('startDate', new Date().toISOString());
+                }
+                
+                // Initialize audio tools with error handling
+                if (metronome && typeof metronome.initialize === 'function') {
+                    metronome.initialize().catch(error => {
+                        console.log('Metronome initialization failed:', error);
+                    });
+                }
+                
+                // Initialize UI
+                initializeDarkMode();
+                registerServiceWorker();
+                addWebAppManifest();
+                
+                // Load main content
+                updateProgress();
+                showOverview();
+                setupSearchAndFilter();
+                handleMobileLayout();
+                
+                // Add the additional styles
+                const styleSheet = document.createElement('style');
+                styleSheet.textContent = additionalStyles;
+                document.head.appendChild(styleSheet);
+                
+                // Perform health check
+                setTimeout(() => {
+                    const health = performHealthCheck();
+                    console.log('🎸 App Health Check:', health);
+                    
+                    if (health.localStorage && health.weekData && health.navigation) {
+                        console.log('🎸 Guitar Curriculum App Ready!');
+                        showMessage('Welcome to Guitar Curriculum! 🎸', 'success');
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error('🎸 Initialization error:', error);
+                showMessage('App initialization failed. Please refresh the page.', 'error');
+            }
+        });
+
+        // Helper function to get total minutes from time string
+        function getTotalMinutes(timeString) {
+            // Extract number from strings like "20-25 minutes" or "55 minutes"
+            const match = timeString.match(/(\d+)(?:-\d+)?\s*min/i);
+            return match ? parseInt(match[1]) : 30; // Default to 30 if no match
+        }
+
+        // Enhanced mobile sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('mobile-open');
+            }
+        }
+
+        // Enhanced phase toggle with error handling
+        function togglePhase(phaseId) {
+            const phaseList = document.getElementById(phaseId);
+            if (phaseList) {
+                phaseList.classList.toggle('active');
+            }
+        }
+
+        // Enhanced week completion with validation
+        function completeWeek(weekNumber) {
+            if (!weekNumber || weekNumber < 1 || weekNumber > 104) {
+                console.error('Invalid week number:', weekNumber);
+                return;
+            }
+            
+            if (!completedWeeks.includes(weekNumber)) {
+                completedWeeks.push(weekNumber);
+                completedWeeks.sort((a, b) => a - b);
+                localStorage.setItem('completedWeeks', JSON.stringify(completedWeeks));
+                updateProgress();
+                
+                // Celebration for milestone weeks
+                if (weekNumber === 13 || weekNumber === 26 || weekNumber === 39 || weekNumber === 52 || weekNumber === 78 || weekNumber === 104) {
+                    showMilestoneAlert(weekNumber);
+                }
+                
+                // Show next week if available
+                if (weekNumber < 104) {
+                    setTimeout(() => {
+                        if (confirm(`Great job completing Week ${weekNumber}! Ready to move to Week ${weekNumber + 1}?`)) {
+                            showWeek(weekNumber + 1);
+                        }
+                    }, 500);
+                } else {
+                    setTimeout(() => {
+                        showFinalCelebration();
+                    }, 500);
+                }
+            }
+        }
+
+        function showMilestoneAlert(weekNumber) {
+            const milestones = {
+                13: "Quarter 1 Complete! 🎉 You've learned basic chords and scales!",
+                26: "Halfway through Year 1! 🎸 You're building solid technique!",
+                39: "Almost done with Year 1! 🚀 You can now combine rhythm and lead!",
+                52: "Year 1 Complete! 🏆 You're now an intermediate player!",
+                78: "Master-level songs unlocked! 🎵 You're approaching advanced status!",
+                104: "Curriculum Complete! 🌟 You're now an advanced intermediate guitarist!"
+            };
+            
+            const message = milestones[weekNumber];
+            if (message) {
+                const notification = document.createElement('div');
+                notification.className = 'timer-notification milestone-celebration';
+                notification.innerHTML = `
+                    <h3>🏆 Milestone Achieved!</h3>
+                    <p>${message}</p>
+                    <p>Consider recording yourself playing something you've learned!</p>
+                    <button onclick="this.parentElement.remove()" class="timer-btn" style="margin-top: 1rem;">Awesome!</button>
+                `;
+                
+                document.body.appendChild(notification);
+                playNotificationSound();
+            }
+        }
+
+        function showFinalCelebration() {
+            const notification = document.createElement('div');
+            notification.className = 'timer-notification milestone-celebration';
+            notification.style.background = 'linear-gradient(135deg, #ff9a9e, #fecfef, #ffeaa7)';
+            notification.innerHTML = `
+                <h3>🎉 CONGRATULATIONS! 🎉</h3>
+                <p>You've completed the entire 2-year guitar curriculum!</p>
+                <p>You're now an advanced intermediate guitarist with the skills to:</p>
+                <ul style="text-align: left; margin: 1rem 0;">
+                    <li>Play complex songs and arrangements</li>
+                    <li>Improvise confidently in multiple styles</li>
+                    <li>Understand advanced music theory</li>
+                    <li>Perform with confidence</li>
+                    <li>Continue learning independently</li>
+                </ul>
+                <p><strong>Keep playing, keep growing! 🎸🎵</strong></p>
+                <button onclick="this.parentElement.remove()" class="timer-btn" style="margin-top: 1rem; background: #ff6b6b;">Amazing Journey!</button>
+            `;
+            
+            document.body.appendChild(notification);
+        }
+
+        // Enhanced current week finder
+        function goToCurrentWeek() {
+            // Find the first incomplete week
+            for (let i = 1; i <= 104; i++) {
+                if (!completedWeeks.includes(i)) {
+                    showWeek(i);
+                    return;
+                }
+            }
+            // If all weeks completed, go to final week
+            showWeek(104);
+        }
+
+        // Enhanced show week with better error handling
+        function showWeek(weekNumber) {
+            if (!weekNumber || weekNumber < 1 || weekNumber > 104) {
+                console.error('Invalid week number:', weekNumber);
+                return;
+            }
+            
+            currentWeek = weekNumber;
+            
+            // Hide overview
+            const overview = document.getElementById('overview');
+            if (overview) {
+                overview.style.display = 'none';
+            }
+            
+            // Hide all week content
+            document.querySelectorAll('.week-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Show specific week or create it
+            let weekElement = document.getElementById(`week${weekNumber}`);
+            if (!weekElement) {
+                weekElement = createWeekElement(weekNumber);
+            }
+            
+            if (weekElement) {
+                weekElement.classList.add('active');
+                updateProgress();
+                
+                // Scroll to top
+                const contentArea = document.querySelector('.content-area');
+                if (contentArea) {
+                    contentArea.scrollTop = 0;
+                }
+                
+                // Close mobile sidebar
+                if (window.innerWidth <= 768) {
+                    const sidebar = document.getElementById('sidebar');
+                    if (sidebar) {
+                        sidebar.classList.remove('mobile-open');
+                    }
+                }
+            }
+        }
+
+        // Enhanced overview display
+        function showOverview() {
+            // Hide all week content
+            document.querySelectorAll('.week-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            const overview = document.getElementById('overview');
+            if (overview) {
+                overview.style.display = 'block';
+            }
+            
+            // Close mobile sidebar
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    sidebar.classList.remove('mobile-open');
+                }
+            }
+        }
+
+        // Define the additional styles that were referenced
+        const additionalStyles = `
+            .milestone-celebration {
+                animation: celebrate 0.6s ease-out;
+                border: 3px solid gold;
+                box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            }
+            
+            @keyframes celebrate {
+                0% { transform: translate(-50%, -50%) scale(0.5) rotate(-10deg); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.1) rotate(5deg); }
+                100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            }
+            
+            .error-message {
+                background: #e74c3c;
+                color: white;
+                padding: 1rem;
+                border-radius: 6px;
+                margin: 1rem 0;
+                text-align: center;
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10001;
+                max-width: 400px;
+            }
+            
+            .success-message {
+                background: #27ae60;
+                color: white;
+                padding: 1rem;
+                border-radius: 6px;
+                margin: 1rem 0;
+                text-align: center;
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10001;
+                max-width: 400px;
+            }
+            
+            /* Enhanced mobile responsiveness */
+            @media (max-width: 480px) {
+                .timer-controls {
+                    flex-direction: column;
+                    gap: 0.3rem;
+                }
+                
+                .timer-btn {
+                    width: 100%;
+                    padding: 0.6rem;
+                }
+                
+                .stats-grid {
+                    grid-template-columns: 1fr;
+                    gap: 0.5rem;
+                }
+                
+                .chord-diagram pre {
+                    font-size: 0.7rem;
+                    padding: 0.6rem;
+                }
+                
+                .practice-timer {
+                    padding: 0.8rem;
+                }
+                
+                .timer-display {
+                    font-size: 1.5rem;
+                }
+                
+                .session-timer {
+                    top: 5px;
+                    right: 5px;
+                    padding: 0.6rem;
+                    min-width: 140px;
+                }
+                
+                .week-progress {
+                    bottom: 5px;
+                    right: 5px;
+                    width: 45px;
+                    height: 45px;
+                    font-size: 0.8rem;
+                }
+            }
+            
+            /* Focus styles for accessibility */
+            button:focus, 
+            .nav-btn:focus, 
+            .timer-btn:focus,
+            .complete-week-btn:focus,
+            .preset-btn:focus {
+                outline: 2px solid #3498db;
+                outline-offset: 2px;
+                box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.2);
+            }
+            
+            /* Loading states */
+            .loading {
+                opacity: 0.6;
+                pointer-events: none;
+                position: relative;
+            }
+            
+            .loading::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 20px;
+                height: 20px;
+                margin: -10px 0 0 -10px;
+                border: 2px solid #3498db;
+                border-radius: 50%;
+                border-top-color: transparent;
+                animation: spin 1s linear infinite;
+            }
+            
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+            
+            /* Smooth transitions */
+            .practice-item,
+            .chord-diagram,
+            .nav-btn,
+            .timer-btn,
+            .complete-week-btn {
+                transition: all 0.2s ease;
+            }
+            
+            /* Enhanced dark mode contrast */
+            .dark-mode .practice-time {
+                color: #f39c12;
+                font-weight: bold;
+            }
+            
+            .dark-mode .week-title {
+                color: #ecf0f1;
+            }
+            
+            .dark-mode .week-subtitle {
+                color: #bdc3c7;
+            }
+            
+            .dark-mode input,
+            .dark-mode select,
+            .dark-mode textarea {
+                background: #34495e;
+                color: #ecf0f1;
+                border-color: #4a6741;
+            }
+            
+            .dark-mode input:focus,
+            .dark-mode select:focus,
+            .dark-mode textarea:focus {
+                border-color: #3498db;
+                box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+            }
+        `;
+
+        // Enhanced input validation
+        function validateCustomTimer() {
+            const input = document.getElementById('customTimer');
+            if (!input) return false;
+            
+            const minutes = parseInt(input.value);
+            
+            if (!minutes || minutes < 1 || minutes > 120) {
+                showMessage('Please enter a valid duration (1-120 minutes)', 'error');
+                input.focus();
+                return false;
+            }
+            
+            return true;
+        }
+
+        function startCustomTimer() {
+            if (!validateCustomTimer()) return;
+            
+            const input = document.getElementById('customTimer');
+            const minutes = parseInt(input.value);
+            
+            startQuickTimer(minutes);
+            input.value = '';
+            showMessage(`${minutes}-minute timer started!`, 'success');
+        }
+
+        // Message display system
+        function showMessage(text, type = 'info') {
+            const existingMessage = document.querySelector('.error-message, .success-message, .info-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            
+            const message = document.createElement('div');
+            message.className = `${type}-message`;
+            message.textContent = text;
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (message.parentElement) {
+                    message.remove();
+                }
+            }, 3000);
+            
+            // Allow manual dismissal
+            message.addEventListener('click', () => message.remove());
+            
+            document.body.appendChild(message);
+        }
+
+        // Enhanced goal saving with validation
+        function saveGoals() {
+            try {
+                const dailyTarget = document.getElementById('dailyTarget')?.value;
+                const focusArea = document.getElementById('focusArea')?.value;
+                const personalGoal = document.getElementById('personalGoal')?.value;
+                
+                if (!dailyTarget || dailyTarget < 5 || dailyTarget > 180) {
+                    showMessage('Please enter a valid daily target (5-180 minutes)', 'error');
+                    return;
+                }
+                
+                safeLocalStorageSet('dailyTarget', dailyTarget);
+                safeLocalStorageSet('focusArea', focusArea);
+                safeLocalStorageSet('personalGoal', personalGoal);
+                
+                showMessage('Goals saved successfully! 🎸', 'success');
+            } catch (error) {
+                console.error('Error saving goals:', error);
+                showMessage('Error saving goals. Please try again.', 'error');
+            }
+        }
+
+        // Enhanced dark mode with system preference detection
+        function initializeDarkMode() {
+            try {
+                // Check for saved preference or system preference
+                const savedMode = safeLocalStorageGet('darkMode');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                
+                const shouldUseDark = savedMode === 'true' || (savedMode === null && systemPrefersDark);
+                
+                if (shouldUseDark) {
+                    document.body.classList.add('dark-mode');
+                    const icon = document.getElementById('darkModeIcon');
+                    if (icon) icon.textContent = '☀️';
+                }
+                
+                // Listen for system theme changes
+                if (window.matchMedia) {
+                    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                        if (safeLocalStorageGet('darkMode') === null) {
+                            if (e.matches) {
+                                document.body.classList.add('dark-mode');
+                            } else {
+                                document.body.classList.remove('dark-mode');
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Dark mode initialization error:', error);
+            }
+        }
+
+        function toggleDarkMode() {
+            try {
+                const body = document.body;
+                const isDark = body.classList.toggle('dark-mode');
+                safeLocalStorageSet('darkMode', isDark.toString());
+                
+                // Update icon
+                const icon = document.getElementById('darkModeIcon');
+                if (icon) {
+                    icon.textContent = isDark ? '☀️' : '🌙';
+                }
+                
+                showMessage(`${isDark ? 'Dark' : 'Light'} mode enabled`, 'success');
+            } catch (error) {
+                console.error('Dark mode toggle error:', error);
+                showMessage('Error toggling dark mode', 'error');
+            }
+        }
+
+        // Clean up timers when leaving page
+        window.addEventListener('beforeunload', () => {
+            Object.values(activeTimers).forEach(timer => {
+                if (timer.interval) {
+                    clearInterval(timer.interval);
+                }
+            });
+            
+            if (sessionStartTime) {
+                endSession();
+            }
+            
+            // Stop metronome and tuner
+            if (metronome) metronome.stop();
+            if (guitarTuner) guitarTuner.stop();
+        });
+
+        /* Dark mode styles */
+        .dark-mode {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #ecf0f1;
+        }
+
+        .dark-mode .container {
+            background: #2c3e50;
+            color: #ecf0f1;
+        }
+
+        .dark-mode .sidebar {
+            background: #34495e;
+            border-right-color: #4a6741;
+        }
+
+        .dark-mode .practice-section {
+            background: #34495e;
+            border-color: #4a6741;
+            color: #ecf0f1;
+        }
+
+        .dark-mode .chord-diagram {
+            background: #34495e;
+            border-color: #4a6741;
+        }
+
+        .dark-mode .chord-diagram pre {
+            background: #2c3e50;
+            border-color: #4a6741;
+            color: #ecf0f1;
+        }
+
+        .dark-mode .goals-section {
+            background: #34495e;
+            border-color: #4a6741;
+            color: #ecf0f1;
+        }
+
+        .dark-mode .track-info {
+            background: #34495e;
+            border-color: #4a6741;
+            color: #ecf0f1;
+        }
+
+        .dark-mode .practice-item {
+            background: #2c3e50;
+            border-left-color: #3498db;
+        }
+
+        .dark-mode .practice-item:hover {
+            background: #34495e;
+        }
+
+        .dark-mode .week-item:hover {
+            background: #4a6741;
+            color: #ecf0f1;
+        }
+
+        .dark-mode .week-item.completed {
+            background: #27ae60;
+            color: white;
+        }
+
+        .dark-mode .week-item.current {
+            background: #f39c12;
+            color: white;
+        }
+
+        .dark-mode .overview-section {
+            background: #34495e;
+            border-left-color: #3498db;
+            color: #ecf0f1;
+        }
+
+        .dark-mode .phase-overview {
+            background: #34495e;
+            border-color: #4a6741;
+            color: #ecf0f1;
+        }
+
+        .dark-mode .timer-settings {
+            background: #34495e;
+            border-color: #4a6741;
+            color: #ecf0f1;
+        }
+
+        .dark-mode .preset-btn {
+            background: #2c3e50;
+            border-color: #4a6741;
+            color: #ecf0f1;
+        }
+
+        .dark-mode .preset-btn:hover {
+            background: #4a6741;
+            color: white;
+        }
+
         // Export progress function
         function exportProgress() {
             const progressData = {
@@ -590,9 +1385,12 @@
                         <button class="nav-btn" onclick="goToCurrentWeek()" style="width: 100%; margin-bottom: 0.5rem;">🎯 Go to Current Week</button>
                         <button class="nav-btn" onclick="showProgressStats()" style="width: 100%; margin-bottom: 0.5rem; background: #9b59b6;">📊 Progress Stats</button>
                         <button class="nav-btn" onclick="showPracticeLog()" style="width: 100%; margin-bottom: 0.5rem; background: #8e44ad;">📈 Practice Log</button>
+                        <button class="nav-btn" onclick="showGoalSetting()" style="width: 100%; margin-bottom: 0.5rem; background: #e67e22;">🎯 Set Goals</button>
+                        <button class="nav-btn" onclick="showTroubleshooting()" style="width: 100%; margin-bottom: 0.5rem; background: #e74c3c;">🔧 Help & Tips</button>
+                        <button class="nav-btn" onclick="toggleDarkMode()" style="width: 100%; margin-bottom: 0.5rem; background: #34495e;"><span id="darkModeIcon">🌙</span> Dark Mode</button>
                         <button class="nav-btn" onclick="exportProgress()" style="width: 100%; margin-bottom: 0.5rem; background: #27ae60;">💾 Export Progress</button>
                         <input type="file" id="importFile" accept=".json" onchange="importProgress(event)" style="display: none;">
-                        <button class="nav-btn" onclick="document.getElementById('importFile').click()" style="width: 100%; background: #e67e22;">📁 Import Progress</button>
+                        <button class="nav-btn" onclick="document.getElementById('importFile').click()" style="width: 100%; background: #f39c12;">📁 Import Progress</button>
                     </div>
 
                     <div style="background: #f8f9fa; padding: 0.8rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.85rem;">
@@ -603,7 +1401,8 @@
                         G: Go to current week<br>
                         S: Show progress stats<br>
                         P: Practice log<br>
-                        T: Quick 25-min timer
+                        T: Quick 25-min timer<br>
+                        M: Toggle metronome
                     </div>
                 </div>
 
@@ -2717,6 +3516,19 @@ D5 Power Chord:
 
                 ${createTimerSettings()}
 
+                <!-- Audio Tools Section -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
+                    <div style="grid-column: 1 / -1;">
+                        ${createMetronomeWidget()}
+                    </div>
+                </div>
+
+                ${weekNumber === 1 ? `
+                    <div style="margin: 1rem 0;">
+                        ${createGuitarTuner()}
+                    </div>
+                ` : ''}
+
                 ${data.chords ? `
                     <div class="practice-section">
                         <h4>🎼 Chord Diagrams</h4>
@@ -2747,6 +3559,7 @@ D5 Power Chord:
                         ${weekTechniques.map(technique => `
                             <div style="margin-bottom: 1rem;">
                                 <pre style="color: white; margin: 0;">${techniqueTips[technique] || ''}</pre>
+                                ${createTechniqueDemo(technique)}
                             </div>
                         `).join('')}
                     </div>
@@ -2771,6 +3584,10 @@ D5 Power Chord:
                         ${createPracticeTimer(`${weekNumber}-full`, getTotalMinutes(data.totalTime), `Complete ${data.totalTime} Session`)}
                     </div>
                 </div>
+
+                ${createBackingTrackEmbed(weekNumber)}
+
+                ${createEquipmentRecommendations(weekNumber)}
 
                 <div class="goals-section">
                     <h5>🎯 Goals for This Week</h5>
@@ -2812,6 +3629,13 @@ D5 Power Chord:
                     </div>
                 ` : ''}
 
+                ${weekNumber % 13 === 0 ? `
+                    <div class="milestone-highlight">
+                        <h5>🏆 Quarter Milestone!</h5>
+                        <p>Congratulations! You've completed ${Math.floor(weekNumber/13)} quarter${weekNumber > 13 ? 's' : ''} of the curriculum. Take a moment to record yourself playing something you've learned!</p>
+                    </div>
+                ` : ''}
+
                 <button class="complete-week-btn" onclick="completeWeek(${weekNumber})">
                     ${completedWeeks.includes(weekNumber) ? '✅ Week Completed!' : `✅ Complete Week ${weekNumber}`}
                 </button>
@@ -2832,11 +3656,254 @@ D5 Power Chord:
             return match ? parseInt(match[1]) : 0;
         }
 
-        // Helper function to get total minutes from time string
-        function getTotalMinutes(timeString) {
-            // Extract number from strings like "20-25 minutes" or "55 minutes"
-            const match = timeString.match(/(\d+)(?:-\d+)?\s*min/i);
-            return match ? parseInt(match[1]) : 30; // Default to 30 if no match
+        function createBasicWeekElement(weekNumber) {
+            const subtitle = getWeekSubtitle(weekNumber);
+            const totalTime = getWeekTime(weekNumber);
+            
+            const weekElement = document.createElement('div');
+            weekElement.id = `week${weekNumber}`;
+            weekElement.className = 'week-content';
+            
+            weekElement.innerHTML = `
+                <div class="week-header">
+                    <div class="week-title">Week ${weekNumber}: Advanced Content</div>
+                    <div class="week-subtitle">${subtitle}</div>
+                </div>
+
+                ${createTimerSettings()}
+
+                <div class="practice-section">
+                    <h4>🎯 Week ${weekNumber} Practice (${totalTime})</h4>
+                    <div class="practice-item">
+                        <div class="practice-time">Full Practice Session</div>
+                        <p>This week's detailed content is being developed. Please refer to the complete curriculum document for specific practice instructions. Focus on the techniques and concepts from your current learning phase.</p>
+                        ${createPracticeTimer(`${weekNumber}-basic`, getTotalMinutes(totalTime), `Week ${weekNumber} Practice`)}
+                    </div>
+                </div>
+
+                <div class="goals-section">
+                    <h5>🎯 Goals for This Week</h5>
+                    <p>Continue building on previous weeks' foundation. Focus on consistency, proper technique, and musical expression.</p>
+                </div>
+
+                <div class="track-info">
+                    <h5>💡 Practice Focus</h5>
+                    <p>Use the skills you've learned in previous weeks. If you're struggling with any concepts, review earlier weeks before progressing.</p>
+                </div>
+
+                <button class="complete-week-btn" onclick="completeWeek(${weekNumber})">
+                    ${completedWeeks.includes(weekNumber) ? '✅ Week Completed!' : `✅ Complete Week ${weekNumber}`}
+                </button>
+
+                <div class="week-navigation">
+                    <button class="nav-btn" ${weekNumber === 1 ? 'disabled' : `onclick="showWeek(${weekNumber - 1})"`}>← Previous Week</button>
+                    <button class="nav-btn" ${weekNumber === 104 ? 'disabled' : `onclick="showWeek(${weekNumber + 1})"`}>Next Week →</button>
+                </div>
+            `;
+
+            document.querySelector('.content-area').appendChild(weekElement);
+            return weekElement;
+        }
+
+        // Enhanced error handling for audio features
+        class SafeMetronome extends Metronome {
+            async initialize() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    return true;
+                } catch (error) {
+                    console.log('Audio context not available:', error);
+                    return false;
+                }
+            }
+
+            createClickSound() {
+                if (!this.audioContext) return;
+                
+                try {
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'square';
+                    
+                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
+                    
+                    oscillator.start(this.audioContext.currentTime);
+                    oscillator.stop(this.audioContext.currentTime + 0.1);
+                } catch (error) {
+                    console.log('Error creating click sound:', error);
+                }
+            }
+        }
+
+        class SafeGuitarTuner extends GuitarTuner {
+            async start() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    
+                    this.microphone = this.audioContext.createMediaStreamSource(stream);
+                    this.analyser = this.audioContext.createAnalyser();
+                    this.analyser.fftSize = 4096;
+                    
+                    this.microphone.connect(this.analyser);
+                    this.isActive = true;
+                    this.updateTunerDisplay();
+                    
+                    return true;
+                } catch (error) {
+                    console.log('Microphone access error:', error);
+                    alert('Microphone access is required for the tuner feature. Please enable microphone permissions and try again.');
+                    return false;
+                }
+            }
+        }
+
+        // Create safe instances
+        const metronome = new SafeMetronome();
+        const guitarTuner = new SafeGuitarTuner();
+
+        // Enhanced notification sound with error handling
+        function playNotificationSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create a more pleasant notification sound
+                const oscillator1 = audioContext.createOscillator();
+                const oscillator2 = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator1.connect(gainNode);
+                oscillator2.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Create a pleasant chord
+                oscillator1.frequency.value = 523.25; // C5
+                oscillator2.frequency.value = 659.25; // E5
+                
+                oscillator1.type = 'sine';
+                oscillator2.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+                
+                oscillator1.start(audioContext.currentTime);
+                oscillator2.start(audioContext.currentTime);
+                oscillator1.stop(audioContext.currentTime + 1);
+                oscillator2.stop(audioContext.currentTime + 1);
+            } catch (error) {
+                console.log('Audio notification not available:', error);
+                // Fallback: visual notification only
+            }
+        }
+
+        // Fix mobile responsiveness issues
+        function handleMobileLayout() {
+            const sidebar = document.getElementById('sidebar');
+            const mobileToggle = document.querySelector('.mobile-toggle');
+            
+            if (window.innerWidth <= 768) {
+                if (sidebar && !sidebar.classList.contains('mobile-open')) {
+                    sidebar.style.display = 'none';
+                }
+            } else {
+                if (sidebar) {
+                    sidebar.style.display = 'block';
+                    sidebar.classList.remove('mobile-open');
+                }
+            }
+        }
+
+        // Enhanced progress export with error handling
+        function exportProgress() {
+            try {
+                const progressData = {
+                    completedWeeks: completedWeeks,
+                    currentWeek: currentWeek,
+                    totalProgress: Math.round((completedWeeks.length / 104) * 100),
+                    exportDate: new Date().toISOString(),
+                    startDate: localStorage.getItem('startDate'),
+                    stats: getWeekStats(),
+                    practiceGoals: {
+                        dailyTarget: localStorage.getItem('dailyTarget'),
+                        focusArea: localStorage.getItem('focusArea'),
+                        personalGoal: localStorage.getItem('personalGoal')
+                    },
+                    version: "2.0"
+                };
+                
+                const dataStr = JSON.stringify(progressData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `guitar-progress-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                
+                URL.revokeObjectURL(url);
+                alert('Progress exported successfully! 📁');
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('Error exporting progress. Please try again.');
+            }
+        }
+
+        // Enhanced progress import with error handling
+        function importProgress(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const progressData = JSON.parse(e.target.result);
+                    
+                    if (progressData.completedWeeks && Array.isArray(progressData.completedWeeks)) {
+                        completedWeeks = progressData.completedWeeks;
+                        currentWeek = progressData.currentWeek || 1;
+                        localStorage.setItem('completedWeeks', JSON.stringify(completedWeeks));
+                        
+                        if (progressData.startDate) {
+                            localStorage.setItem('startDate', progressData.startDate);
+                        }
+                        
+                        if (progressData.practiceGoals) {
+                            if (progressData.practiceGoals.dailyTarget) {
+                                localStorage.setItem('dailyTarget', progressData.practiceGoals.dailyTarget);
+                            }
+                            if (progressData.practiceGoals.focusArea) {
+                                localStorage.setItem('focusArea', progressData.practiceGoals.focusArea);
+                            }
+                            if (progressData.practiceGoals.personalGoal) {
+                                localStorage.setItem('personalGoal', progressData.practiceGoals.personalGoal);
+                            }
+                        }
+                        
+                        updateProgress();
+                        alert('Progress imported successfully! 🎸');
+                    } else {
+                        throw new Error('Invalid file format');
+                    }
+                } catch (error) {
+                    console.error('Import error:', error);
+                    alert('Error importing progress file. Please check that you selected a valid progress file exported from this application.');
+                }
+            };
+            
+            reader.onerror = function() {
+                alert('Error reading file. Please try again.');
+            };
+            
+            reader.readAsText(file);
+            
+            // Clear the input so the same file can be selected again
+            event.target.value = '';
         }
 
         // Helper functions to determine scales and techniques for each week
@@ -2938,68 +4005,227 @@ D5 Power Chord:
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            // Set start date if not already set
-            if (!localStorage.getItem('startDate')) {
-                localStorage.setItem('startDate', new Date().toISOString());
+            try {
+                // Set start date if not already set
+                if (!localStorage.getItem('startDate')) {
+                    localStorage.setItem('startDate', new Date().toISOString());
+                }
+                
+                // Initialize audio tools and UI
+                metronome.initialize().catch(error => {
+                    console.log('Metronome initialization failed:', error);
+                });
+                
+                initializeDarkMode();
+                initializePWA();
+                
+                updateProgress();
+                showOverview();
+                setupSearchAndFilter();
+                handleMobileLayout();
+                
+                // Add the additional styles
+                const styleSheet = document.createElement('style');
+                styleSheet.textContent = additionalStyles;
+                document.head.appendChild(styleSheet);
+                
+                console.log('Guitar curriculum app initialized successfully');
+            } catch (error) {
+                console.error('Initialization error:', error);
+                // Show error message to user
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = 'Some features may not work properly. Please refresh the page.';
+                document.body.insertBefore(errorDiv, document.body.firstChild);
             }
             
-            updateProgress();
-            showOverview();
-            setupSearchAndFilter();
-            
-            // Add keyboard shortcuts
+            // Add keyboard shortcuts with better error handling
             document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey || e.metaKey) return; // Ignore ctrl/cmd combinations
-                if (e.target.tagName === 'INPUT') return; // Ignore when typing in inputs
-                
-                switch(e.key) {
-                    case 'ArrowLeft':
-                        e.preventDefault();
-                        if (currentWeek > 1) showWeek(currentWeek - 1);
-                        break;
-                    case 'ArrowRight':
-                        e.preventDefault();
-                        if (currentWeek < 104) showWeek(currentWeek + 1);
-                        break;
-                    case ' ':
-                        e.preventDefault();
-                        completeWeek(currentWeek);
-                        break;
-                    case 'h':
-                    case 'H':
-                        e.preventDefault();
-                        showOverview();
-                        break;
-                    case 'g':
-                    case 'G':
-                        e.preventDefault();
-                        goToCurrentWeek();
-                        break;
-                    case 's':
-                    case 'S':
-                        e.preventDefault();
-                        showProgressStats();
-                        break;
-                    case 'p':
-                    case 'P':
-                        e.preventDefault();
-                        showPracticeLog();
-                        break;
-                    case 't':
-                    case 'T':
-                        e.preventDefault();
-                        startQuickTimer(25); // Default Pomodoro timer
-                        break;
+                try {
+                    if (e.ctrlKey || e.metaKey) return; // Ignore ctrl/cmd combinations
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; // Ignore when typing in inputs
+                    
+                    switch(e.key) {
+                        case 'ArrowLeft':
+                            e.preventDefault();
+                            if (currentWeek > 1) showWeek(currentWeek - 1);
+                            break;
+                        case 'ArrowRight':
+                            e.preventDefault();
+                            if (currentWeek < 104) showWeek(currentWeek + 1);
+                            break;
+                        case ' ':
+                            e.preventDefault();
+                            completeWeek(currentWeek);
+                            break;
+                        case 'h':
+                        case 'H':
+                            e.preventDefault();
+                            showOverview();
+                            break;
+                        case 'g':
+                        case 'G':
+                            e.preventDefault();
+                            goToCurrentWeek();
+                            break;
+                        case 's':
+                        case 'S':
+                            e.preventDefault();
+                            showProgressStats();
+                            break;
+                        case 'p':
+                        case 'P':
+                            e.preventDefault();
+                            showPracticeLog();
+                            break;
+                        case 't':
+                        case 'T':
+                            e.preventDefault();
+                            startQuickTimer(25); // Default Pomodoro timer
+                            break;
+                        case 'm':
+                        case 'M':
+                            e.preventDefault();
+                            if (metronome && metronome.isPlaying) {
+                                metronome.stop();
+                            } else if (metronome) {
+                                metronome.start();
+                            }
+                            break;
+                    }
+                } catch (error) {
+                    console.error('Keyboard shortcut error:', error);
                 }
             });
         });
 
-        // Handle window resize
+        // Handle window resize with error handling
         window.addEventListener('resize', function() {
-            if (window.innerWidth > 768) {
-                document.getElementById('sidebar').classList.remove('mobile-open');
+            try {
+                handleMobileLayout();
+            } catch (error) {
+                console.error('Resize handler error:', error);
             }
         });
+
+        // Enhanced cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            try {
+                // Stop all active timers
+                if (activeTimers && typeof activeTimers === 'object') {
+                    Object.values(activeTimers).forEach(timer => {
+                        if (timer && timer.interval) {
+                            clearInterval(timer.interval);
+                        }
+                    });
+                }
+                
+                // End practice session
+                if (sessionStartTime) {
+                    endSession();
+                }
+                
+                // Stop audio tools
+                if (metronome && typeof metronome.stop === 'function') {
+                    metronome.stop();
+                }
+                if (guitarTuner && typeof guitarTuner.stop === 'function') {
+                    guitarTuner.stop();
+                }
+            } catch (error) {
+                console.error('Cleanup error:', error);
+            }
+        });
+
+        // Add error handling for localStorage operations
+        function safeLocalStorageSet(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (error) {
+                console.error('LocalStorage set error:', error);
+                return false;
+            }
+        }
+
+        function safeLocalStorageGet(key, defaultValue = null) {
+            try {
+                return localStorage.getItem(key) || defaultValue;
+            } catch (error) {
+                console.error('LocalStorage get error:', error);
+                return defaultValue;
+            }
+        }
+
+        // Enhanced save practice session with error handling
+        function savePracticeSession(totalSeconds) {
+            try {
+                const today = new Date().toDateString();
+                const sessions = JSON.parse(safeLocalStorageGet('practiceSessions', '{}'));
+                
+                if (!sessions[today]) {
+                    sessions[today] = 0;
+                }
+                
+                sessions[today] += totalSeconds;
+                safeLocalStorageSet('practiceSessions', JSON.stringify(sessions));
+            } catch (error) {
+                console.error('Error saving practice session:', error);
+            }
+        }
+
+        // PWA offline functionality
+        function initializePWA() {
+            try {
+                if ('serviceWorker' in navigator) {
+                    // For now, just log that PWA could be initialized
+                    console.log('PWA functionality available');
+                }
+            } catch (error) {
+                console.error('PWA initialization error:', error);
+            }
+        }
+
+        // Add visual feedback for interactions
+        function addClickFeedback() {
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('nav-btn') || 
+                    e.target.classList.contains('timer-btn') || 
+                    e.target.classList.contains('complete-week-btn')) {
+                    
+                    e.target.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        e.target.style.transform = '';
+                    }, 150);
+                }
+            });
+        }
+
+        // Initialize click feedback
+        document.addEventListener('DOMContentLoaded', addClickFeedback);
+
+        // Accessibility improvements
+        function enhanceAccessibility() {
+            // Add ARIA labels to interactive elements
+            document.querySelectorAll('button').forEach(button => {
+                if (!button.getAttribute('aria-label') && button.textContent) {
+                    button.setAttribute('aria-label', button.textContent.trim());
+                }
+            });
+            
+            // Add focus indicators
+            const focusStyle = document.createElement('style');
+            focusStyle.textContent = `
+                button:focus, .nav-btn:focus, .timer-btn:focus {
+                    outline: 2px solid #3498db;
+                    outline-offset: 2px;
+                }
+            `;
+            document.head.appendChild(focusStyle);
+        }
+
+        // Initialize accessibility enhancements
+        document.addEventListener('DOMContentLoaded', enhanceAccessibility);
 
         // Search and filter functionality
         let searchTerm = '';
@@ -3581,18 +4807,131 @@ Keep up the great work! 🎸
             return `${minutes}m`;
         }
 
-        // Clean up timers when leaving page
-        window.addEventListener('beforeunload', () => {
-            Object.values(activeTimers).forEach(timer => {
-                if (timer.interval) {
-                    clearInterval(timer.interval);
-                }
-            });
-            
-            if (sessionStartTime) {
-                endSession();
+        // Metronome functionality
+        class Metronome {
+            constructor() {
+                this.audioContext = null;
+                this.isPlaying = false;
+                this.bpm = 60;
+                this.intervalId = null;
+                this.clickSound = null;
             }
-        });
+
+            async initialize() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (error) {
+                    console.log('Audio context not available');
+                }
+            }
+
+            createClickSound() {
+                if (!this.audioContext) return;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + 0.1);
+            }
+
+            start() {
+                if (this.isPlaying) return;
+                
+                this.isPlaying = true;
+                const interval = (60 / this.bpm) * 1000;
+                
+                this.intervalId = setInterval(() => {
+                    this.createClickSound();
+                    this.flashMetronome();
+                }, interval);
+                
+                this.updateMetronomeControls();
+            }
+
+            stop() {
+                this.isPlaying = false;
+                if (this.intervalId) {
+                    clearInterval(this.intervalId);
+                    this.intervalId = null;
+                }
+                this.updateMetronomeControls();
+            }
+
+            setBPM(newBPM) {
+                this.bpm = Math.max(40, Math.min(200, newBPM));
+                if (this.isPlaying) {
+                    this.stop();
+                    this.start();
+                }
+                this.updateBPMDisplay();
+            }
+
+            flashMetronome() {
+                const flash = document.getElementById('metronome-flash');
+                if (flash) {
+                    flash.style.background = '#ff6b6b';
+                    setTimeout(() => {
+                        flash.style.background = '#e9ecef';
+                    }, 100);
+                }
+            }
+
+            updateMetronomeControls() {
+                const startBtn = document.getElementById('metronome-start');
+                const stopBtn = document.getElementById('metronome-stop');
+                
+                if (startBtn) startBtn.disabled = this.isPlaying;
+                if (stopBtn) stopBtn.disabled = !this.isPlaying;
+            }
+
+            updateBPMDisplay() {
+                const display = document.getElementById('metronome-bpm');
+                if (display) display.textContent = this.bpm;
+            }
+        }
+
+        const metronome = new Metronome();
+
+        function createMetronomeWidget() {
+            return `
+                <div class="practice-section" style="background: linear-gradient(135deg, #74b9ff, #0984e3);">
+                    <h4 style="color: white; margin-bottom: 1rem;">🎵 Built-in Metronome</h4>
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                        <div id="metronome-flash" style="width: 60px; height: 60px; border-radius: 50%; background: #e9ecef; border: 3px solid white; transition: background 0.1s;"></div>
+                        <div style="color: white;">
+                            <div style="font-size: 2rem; font-weight: bold;"><span id="metronome-bpm">60</span> BPM</div>
+                            <div style="margin: 0.5rem 0;">
+                                <button onclick="metronome.setBPM(metronome.bpm - 5)" class="timer-btn">-5</button>
+                                <button onclick="metronome.setBPM(metronome.bpm - 1)" class="timer-btn">-1</button>
+                                <button onclick="metronome.setBPM(metronome.bpm + 1)" class="timer-btn">+1</button>
+                                <button onclick="metronome.setBPM(metronome.bpm + 5)" class="timer-btn">+5</button>
+                            </div>
+                            <div>
+                                <button id="metronome-start" onclick="metronome.start()" class="timer-btn">▶️ Start</button>
+                                <button id="metronome-stop" onclick="metronome.stop()" class="timer-btn" disabled>⏹️ Stop</button>
+                            </div>
+                        </div>
+                        <div style="color: white; font-size: 0.9rem; flex: 1; min-width: 200px;">
+                            <strong>Quick BPMs:</strong><br>
+                            <button onclick="metronome.setBPM(60)" class="preset-btn" style="color: white; border-color: white;">60 (Slow)</button>
+                            <button onclick="metronome.setBPM(80)" class="preset-btn" style="color: white; border-color: white;">80 (Medium)</button>
+                            <button onclick="metronome.setBPM(100)" class="preset-btn" style="color: white; border-color: white;">100 (Fast)</button>
+                            <button onclick="metronome.setBPM(120)" class="preset-btn" style="color: white; border-color: white;">120 (Rock)</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
             const progressData = {
                 completedWeeks: completedWeeks,
                 currentWeek: currentWeek,
