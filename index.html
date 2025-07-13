@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2-Year Electric Guitar Curriculum: Blues/Rock Focus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e74c3c, #f39c12, #27ae60);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .main-content {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+            max-height: calc(100vh - 120px);
+            position: sticky;
+            top: 120px;
+        }
+
+        .nav-section {
+            padding: 1rem;
+        }
+
+        .nav-section h3 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.3rem;
+        }
+
+        .phase-nav {
+            margin-bottom: 1.5rem;
+        }
+
+        .phase-title {
+            background: #3498db;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+            transition: background 0.3s;
+        }
+
+        .phase-title:hover {
+            background: #2980b9;
+        }
+
+        .week-list {
+            display: none;
+            padding-left: 1rem;
+        }
+
+        .week-list.active {
+            display: block;
+        }
+
+        .week-item {
+            padding: 0.3rem 0.5rem;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-bottom: 0.2rem;
+            transition: background 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .week-item:hover {
+            background: #e9ecef;
+        }
+
+        .week-item.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .week-item.current {
+            background: #fff3cd;
+            color: #856404;
+            font-weight: bold;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .overview-section {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #3498db;
+        }
+
+        .week-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .week-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .week-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .week-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .week-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .practice-section {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .practice-section h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0.5rem;
+        }
+
+        .practice-item {
+            margin-bottom: 1rem;
+            padding-left: 1rem;
+            border-left: 3px solid #3498db;
+        }
+
+        .practice-time {
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 0.3rem;
+        }
+
+        .goals-section {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .goals-section h5 {
+            color: #27ae60;
+            margin-bottom: 0.5rem;
+        }
+
+        .track-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .track-info h5 {
+            color: #856404;
+            margin-bottom: 0.5rem;
+        }
+
+        .week-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .nav-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #2980b9;
+        }
+
+        .nav-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .complete-week-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+            transition: background 0.3s;
+        }
+
+        .complete-week-btn:hover {
+            background: #219a52;
+        }
+
+        .stats-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 0.8rem;
+            border-radius: 4px;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .mobile-toggle {
+            display: none;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            width: 100%;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+                max-height: none;
+                display: none;
+            }
+
+            .sidebar.mobile-open {
+                display: block;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+        }
+
+        .overview-content {
+            display: block;
+        }
+
+        .phase-overview {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .phase-overview h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.5rem;
+        }
+
+        ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎸 2-Year Electric Guitar Curriculum</h1>
+            <p>Blues/Rock Focus - Complete Learning Path</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </header>
+
+        <button class="mobile-toggle" onclick="toggleSidebar()">
+            📋 Navigate Weeks
+        </button>
+
+        <div class="main-content">
+            <aside class="sidebar" id="sidebar">
+                <div class="nav-section">
+                    <div class="stats-section">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-number" id="completedWeeks">0</span>
+                                <span class="stat-label">Completed</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="currentWeek">1</span>
+                                <span class="stat-label">Current Week</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="progressPercent">0%</span>
+                                <span class="stat-label">Progress</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>🗓️ Quick Navigation</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <button class="nav-btn" onclick="showOverview()" style="width: 100%; margin-bottom: 0.5rem;">📖 Curriculum Overview</button>
+                        <button class="nav-btn" onclick="goToCurrentWeek()" style="width: 100%;">🎯 Go to Current Week</button>
+                    </div>
+                </div>
+
+                <!-- Year 1 Navigation -->
+                <div class="nav-section">
+                    <h3>📅 Year 1: Foundation Building</h3>
+                    
+                    <div class="phase-nav">
+                        <div class="phase-title" onclick="togglePhase('phase1')">
+                            Phase 1: Getting Started (Weeks 1-8)
+                        </div>
+                        <div class="week-list" id="phase1">
+                            <div class="week-item" onclick="showWeek(1)">Week 1: Basic Setup & E Major</div>
+                            <div class="week-item" onclick="showWeek(2)">Week 2: A Major & First Changes</div>
+                            <div class="week-item" onclick="showWeek(3)">Week 3: D Major & Power Chords</div>
+                            <div class="week-item" onclick="showWeek(4)">Week 4: Power Chord Expansion</div>
+                            <div class="week-item" onclick="showWeek(5)">Week 5: Rhythm Foundation</div>
+                            <div class="week-item" onclick="showWeek(6)">Week 6: Up-stroke Introduction</div>
+                            <div class="week-item" onclick="showWeek(7)">Week 7: Minor Chords</div>
+                            <div class="week-item" onclick="showWeek(8)">Week 8: 12-Bar Blues Foundation</div>
+                        </div>
+                    </div>
+
+                    <div class="phase-nav">
+                        <div class="phase-title" onclick="togglePhase('phase2')">
+                            Phase 2: Scale Introduction (Weeks 9-16)
+                        </div>
+                        <div class="week-list" id="phase2">
+                            <div class="week-item" onclick="showWeek(9)">Week 9: A Minor Pentatonic</div>
+                            <div class="week-item" onclick="showWeek(10)">Week 10: Simple Pentatonic Licks</div>
+                            <div class="week-item" onclick="showWeek(11)">Week 11: Alternate Picking</div>
+                            <div class="week-item" onclick="showWeek(12)">Week 12: Lead Guitar Posture</div>
+                            <div class="week-item" onclick="showWeek(13)">Week 13: E Minor Pentatonic</div>
+                            <div class="week-item" onclick="showWeek(14)">Week 14: Connecting Positions</div>
+                            <div class="week-item" onclick="showWeek(15)">Week 15: Blues Scale Introduction</div>
+                            <div class="week-item" onclick="showWeek(16)">Week 16: Classic Blues Licks</div>
+                        </div>
+                    </div>
+
+                    <div class="phase-nav">
+                        <div class="phase-title" onclick="togglePhase('phase3')">
+                            Phase 3: Chord Expansion (Weeks 17-24)
+                        </div>
+                        <div class="week-list" id="phase3">
+                            <div class="week-item" onclick="showWeek(17)">Week 17: F Major Barre Prep</div>
+                            <div class="week-item" onclick="showWeek(18)">Week 18: 6th String Barre Chords</div>
+                            <div class="week-item" onclick="showWeek(19)">Week 19: 5th String Barre Chords</div>
+                            <div class="week-item" onclick="showWeek(20)">Week 20: Minor Barre Chords</div>
+                            <div class="week-item" onclick="showWeek(21)">Week 21: Dominant 7th Chords</div>
+                            <div class="week-item" onclick="showWeek(22)">Week 22: Extended Chords</div>
+                            <div class="week-item" onclick="showWeek(23)">Week 23: Advanced Rhythm</div>
+                            <div class="week-item" onclick="showWeek(24)">Week 24: Muted Strums</div>
+                        </div>
+                    </div>
+
+                    <div class="phase-nav">
+                        <div class="phase-title" onclick="togglePhase('phase4')">
+                            Phase 4: Lead Development (Weeks 25-32)
+                        </div>
+                        <div class="week-list" id="phase4">
+                            <div class="week-item" onclick="showWeek(25)">Week 25: Half-Step Bending</div>
+                            <div class="week-item" onclick="showWeek(26)">Week 26: Full-Step Bending</div>
+                            <div class="week-item" onclick="showWeek(27)">Week 27: Vibrato Technique</div>
+                            <div class="week-item" onclick="showWeek(28)">Week 28: Bends + Vibrato</div>
+                            <div class="week-item" onclick="showWeek(29)">Week 29: Hammer-ons & Pull-offs</div>
+                            <div class="week-item" onclick="showWeek(30)">Week 30: Advanced Legato</div>
+                            <div class="week-item" onclick="showWeek(31)">Week 31: Slides & Grace Notes</div>
+                            <div class="week-item" onclick="showWeek(32)">Week 32: Double Stops & Octaves</div>
+                        </div>
+                    </div>
+
+                    <div class="phase-nav">
+                        <div class="phase-title" onclick="togglePhase('phase5')">
+                            Phase 5: Song Application (Weeks 33-40)
+                        </div>
+                        <div class="week-list" id="phase5">
+                            <div class="week-item" onclick="showWeek(33)">Week 33: "Smoke on the Water"</div>
+                            <div class="week-item" onclick="showWeek(34)">Week 34: "Wild Thing"</div>
+                            <div class="week-item" onclick="showWeek(35)">Week 35: "Sweet Home Chicago"</div>
+                            <div class="week-item" onclick="showWeek(36)">Week 36: Basic Blues Improvisation</div>
+                            <div class="week-item" onclick="showWeek(37)">Week 37: "Louie Louie"</div>
+                            <div class="week-item" onclick="showWeek(38)">Week 38: "Gloria"</div>
+                            <div class="week-item" onclick="showWeek(39)">Week 39: Rhythm/Lead Combination</div>
+                            <div class="week-item" onclick="showWeek(40)">Week 40: Jam Session Skills</div>
+                        </div>
+                    </div>
+
+                    <div class="phase-nav">
+                        <div class="phase-title" onclick="togglePhase('phase6')">
+                            Phase 6: Intermediate Prep (Weeks 41-52)
+                        </div>
+                        <div class="week-list" id="phase6">
+                            <div class="week-item" onclick="showWeek(41)">Week 41: Major Scale Introduction</div>
+                            <div class="week-item" onclick="showWeek(42)">Week 42: Major Scale Positions</div>
+                            <div class="week-item" onclick="showWeek(43)">Week 43: Dorian Mode</div>
+                            <div class="week-item" onclick="showWeek(44)">Week 44: Mixolydian Mode</div>
+                            <div class="week-item" onclick="showWeek(45)">Week 45: Add9, Sus2, Sus4</div>
+                            <div class="week-item" onclick="showWeek(46)">Week 46: 9th & 11th Chords</div>
+                            <div class="week-item" onclick="showWeek(47)">Week 47: Overdrive/Distortion</div>
+                            <div class="week-item" onclick="showWeek(48)">Week 48: Delay & Reverb</div>
+                            <div class="week-item" onclick="showWeek(49)">Week 49: "Pride and Joy"</div>
+                            <div class="week-item" onclick="showWeek(50)">Week 50: "Crossroads"</div>
+                            <div class="week-item" onclick="showWeek(51)">Week 51: Year 1 Review</div>
+                            <div class="week-item" onclick="showWeek(52)">Week 52: Performance Prep</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Year 2 Navigation -->
+                <div class="nav-section">
+                    <h3>📅 Year 2: Intermediate Development</h3>
+                    
+                    <div class="phase-nav">
+                        <div class="phase-title" onclick="togglePhase('phase7')">
+                            Phase 7: Advanced Rhythm (Weeks 53-60)
+                        </div>
+                        <div class="week-list" id="phase7">
+                            <div class="week-item" onclick="showWeek(53)">Week 53: Complex Strumming</div>
+                            <div class="week-item" onclick="showWeek(54)">Week 54: Reggae & Ska</div>
+                            <div class="week-item" onclick="showWeek(55)">Week 55: Fingerpicking Intro</div>
+                            <div class="week-item" onclick="showWeek(56)">Week 56: Travis Picking</div>
+                            <div class="week-item" onclick="showWeek(57)">Week 57: Advanced Power Chords</div>
+                            <div class="week-item" onclick="showWeek(58)">Week 58: Punk/Metal Rhythms</div>
+                            <div class="week-item" onclick="showWeek(59)">Week 59: Band Context</div>
+                            <div class="week-item" onclick="showWeek(60)">Week 60: Embellishments</div>
+                        </div>
+                    </div>
+
+                    <div class="phase-nav">
+                        <div class="phase-title" onclick="togglePhase('phase8')">
+                            Phase 8: Scale Mastery (Weeks 61-68)
+                        </div>
+                        <div class="week-list" id="phase8">
+                            <div class="week-item" onclick="showWeek(61)">Week 61: Complete Pentatonic</div>
+                            <div class="week-item" onclick="showWeek(62)">Week 62: Pentatonic Sequences</div>
+                            <div class="week-item" onclick="showWeek(63)">Week 63: 7 Major Positions</div>
+                            <div class="week-item" onclick="showWeek(64)">Week 64: Position Connectivity</div>
+                            <div class="week-item" onclick="showWeek(65)">Week 65: Dorian Applications</div>
+                            <div class="week-item" onclick="showWeek(66)">Week 66: Mixolydian Applications</div>
+                            <div class="week-item" onclick="showWeek(67)">Week 67: Scale Choice</div>
+                            <div class="week-item" onclick="showWeek(68)">Week 68: Improvisation Concepts</div>
+                        </div>
+                    </div>
+
+                    <div class="phase-nav">
+                        <div class="phase-title" onclick="togglePhase('phase9')">
+                            Phase 9: Advanced Lead (Weeks 69-76)
+                        </div>
+                        <div class="week-list" id="phase9">
+                            <div class="week-item" onclick="showWeek(69)">Week 69: Advanced Bending</div>
+                            <div class="week-item" onclick="showWeek(70)">Week 70: Harmony Bends</div>
+                            <div class="week-item" onclick="showWeek(71)">Week 71: Speed Development</div>
+                            <div class="week-item" onclick="showWeek(72)">Week 72: Economy Picking</div>
+                            <div class="week-item" onclick="showWeek(73)">Week 73: Vibrato Mastery</div>
+                            <div class="week-item" onclick="showWeek(74)">Week 74: Vibrato Types</div>
+                            <div class="week-item" onclick="showWeek(75)">Week 75: Phrasing</div>
+                            <div class="week-item" onclick="showWeek(76)">Week 76: Melodic Development</div>
+                        </div>
+                    </div>
+
+                    <div class="phase-nav">
+                        <div class="phase-title" onclick="togglePhase('phase10')">
+                            Phase 10: Song Complexity (Weeks 77-84)
+                        </div>
+                        <div class="week-list" id="phase10">
+                            <div class="week-item" onclick="showWeek(77)">Week 77: "Layla"</div>
+                            <div class="week-item" onclick="showWeek(78)">Week 78: "Sultans of Swing"</div>
+                            <div class="week-item" onclick="showWeek(79)">Week 79: "The Thrill is Gone"</div>
+                            <div class="week-item" onclick="showWeek(80)">Week 80: "Red House"</div>
+                            <div class="week-item" onclick="showWeek(81)">Week 81: "Paranoid"</div>
+                            <div class="week-item" onclick="showWeek(82)">Week 82: "Iron Man"</div>
+                            <div class="week-item" onclick="showWeek(83)">Week 83: Rhythm/Lead Simultaneity</div>
+                            <div class="week-item" onclick="showWeek(84)">Week 84: Loop Pedal Concepts</div>
+                        </div>
+                    </div>
+
+                    <div class="phase-nav">
+                        <div class="phase-title" onclick="togglePhase('phase11')">
+                            Phase 11: Music Theory (Weeks 85-92)
+                        </div>
+                        <div class="week-list" id="phase11">
+                            <div class="week-item" onclick="showWeek(85)">Week 85: Chord Construction</div>
+                            <div class="week-item" onclick="showWeek(86)">Week 86: Substitutions</div>
+                            <div class="week-item" onclick="showWeek(87)">Week 87: Roman Numerals</div>
+                            <div class="week-item" onclick="showWeek(88)">Week 88: Secondary Dominants</div>
+                            <div class="week-item" onclick="showWeek(89)">Week 89: Lead Sheet Reading</div>
+                            <div class="week-item" onclick="showWeek(90)">Week 90: Fake Books</div>
+                            <div class="week-item" onclick="showWeek(91)">Week 91: Basic Songwriting</div>
+                            <div class="week-item" onclick="showWeek(92)">Week 92: Writing Riffs</div>
+                        </div>
+                    </div>
+
+                    <div class="phase-nav">
+                        <div class="phase-title" onclick="togglePhase('phase12')">
+                            Phase 12: Performance & Mastery (Weeks 93-104)
+                        </div>
+                        <div class="week-list" id="phase12">
+                            <div class="week-item" onclick="showWeek(93)">Week 93: Stage Preparation</div>
+                            <div class="week-item" onclick="showWeek(94)">Week 94: Stage Presence</div>
+                            <div class="week-item" onclick="showWeek(95)">Week 95: Recording Basics</div>
+                            <div class="week-item" onclick="showWeek(96)">Week 96: Overdubbing</div>
+                            <div class="week-item" onclick="showWeek(97)">Week 97: Playing with Band</div>
+                            <div class="week-item" onclick="showWeek(98)">Week 98: Communication</div>
+                            <div class="week-item" onclick="showWeek(99)">Week 99: Country/Southern Rock</div>
+                            <div class="week-item" onclick="showWeek(100)">Week 100: Funk/Alternative</div>
+                            <div class="week-item" onclick="showWeek(101)">Week 101: "Comfortably Numb"</div>
+                            <div class="week-item" onclick="showWeek(102)">Week 102: "Stairway to Heaven"</div>
+                            <div class="week-item" onclick="showWeek(103)">Week 103: Self-Assessment</div>
+                            <div class="week-item" onclick="showWeek(104)">Week 104: Finding Your Voice</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="content-area">
+                <!-- Overview Content -->
+                <div id="overview" class="overview-content">
+                    <div class="overview-section">
+                        <h2>🎯 Curriculum Overview</h2>
+                        <p>Welcome to the comprehensive 2-year electric guitar curriculum designed specifically for blues and rock music. This systematic approach will take you from complete beginner to advanced intermediate player with strong musical foundation and performance skills.</p>
+                    </div>
+
+                    <div class="phase-overview">
+                        <h3>📈 Learning Progression</h3>
+                        <ul>
+                            <li><strong>Year 1:</strong> Foundation building with essential chords, scales, techniques, and songs</li>
+                            <li><strong>Year 2:</strong> Advanced techniques, theory application, and performance mastery</li>
+                            <li><strong>Daily Practice:</strong> Progresses from 20 minutes to 90 minutes as skills develop</li>
+                            <li><strong>Weekly Structure:</strong> New concepts, technical development, and musical application</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase-overview">
+                        <h3>🎸 Year 1: Foundation Building</h3>
+                        <ul>
+                            <li><strong>Phase 1 (Weeks 1-8):</strong> Basic chords, power chords, and 12-bar blues</li>
+                            <li><strong>Phase 2 (Weeks 9-16):</strong> Pentatonic scales and basic lead techniques</li>
+                            <li><strong>Phase 3 (Weeks 17-24):</strong> Barre chords and advanced rhythm patterns</li>
+                            <li><strong>Phase 4 (Weeks 25-32):</strong> Lead development with bending, vibrato, and legato</li>
+                            <li><strong>Phase 5 (Weeks 33-40):</strong> Song application and performance skills</li>
+                            <li><strong>Phase 6 (Weeks 41-52):</strong> Music theory and intermediate preparation</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase-overview">
+                        <h3>🚀 Year 2: Intermediate Development</h3>
+                        <ul>
+                            <li><strong>Phase 7 (Weeks 53-60):</strong> Advanced rhythm techniques and fingerpicking</li>
+                            <li><strong>Phase 8 (Weeks 61-68):</strong> Complete scale mastery and improvisation</li>
+                            <li><strong>Phase 9 (Weeks 69-76):</strong> Master-level lead techniques and expression</li>
+                            <li><strong>Phase 10 (Weeks 77-84):</strong> Complex song integration and arrangement</li>
+                            <li><strong>Phase 11 (Weeks 85-92):</strong> Music theory application and composition</li>
+                            <li><strong>Phase 12 (Weeks 93-104):</strong> Performance mastery and finding your voice</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase-overview">
+                        <h3>🎯 Key Milestones</h3>
+                        <ul>
+                            <li><strong>Week 13:</strong> Record 12-bar blues with basic lead</li>
+                            <li><strong>Week 26:</strong> Perform 3 complete songs (rhythm + lead)</li>
+                            <li><strong>Week 39:</strong> Participate in jam session</li>
+                            <li><strong>Week 52:</strong> 30-minute solo performance</li>
+                            <li><strong>Week 78:</strong> Master-level song performance</li>
+                            <li><strong>Week 104:</strong> Complete artistic statement</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase-overview">
+                        <h3>📝 How to Use This Curriculum</h3>
+                        <ul>
+                            <li><strong>Daily Practice:</strong> Follow the detailed practice routines for each week</li>
+                            <li><strong>Progress Tracking:</strong> Mark weeks as complete using the "Complete Week" button</li>
+                            <li><strong>Flexibility:</strong> Spend extra time on challenging weeks if needed</li>
+                            <li><strong>Recording:</strong> Document your progress with recordings at milestone weeks</li>
+                            <li><strong>Patience:</strong> Focus on quality over speed - solid foundations enable advanced playing</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Week Content Template -->
+                <div id="week1" class="week-content">
+                    <div class="week-header">
+                        <div class="week-title">Week 1: Basic Setup & E Major Chord</div>
+                        <div class="week-subtitle">Foundation Building - Getting Started</div>
+                    </div>
+
+                    <div class="practice-section">
+                        <h4>🎯 Daily Practice Routine (20-25 minutes)</h4>
+                        
+                        <div class="practice-item">
+                            <div class="practice-time">Setup & Posture (5 minutes)</div>
+                            <p>Guitar strap height, sitting/standing position, pick grip (hold between thumb and index finger, firm but not tense)</p>
+                        </div>
+
+                        <div class="practice-item">
+                            <div class="practice-time">Fretting Hand Exercise (5 minutes)</div>
+                            <p>One finger per fret exercise (1st finger 1st fret, 2nd finger 2nd fret, etc.) on 6th string</p>
+                        </div>
+
+                        <div class="practice-item">
+                            <div class="practice-time">E Major Chord (10 minutes)</div>
+                            <p>Finger placement: 1st finger 3rd fret 5th string, 2nd finger 2nd fret 4th string, 3rd finger 1st fret 3rd string<br>
+                            Practice: 4 beats hold, 4 beats rest, repeat 20 times<br>
+                            Check each string rings clearly</p>
+                        </div>
+
+                        <div class="practice-item">
+                            <div class="practice-time">Cool Down (5 minutes)</div>
+                            <p>Gentle finger stretches, shake out tension</p>
+                        </div>
+                    </div>
+
+                    <div class="goals-section">
+                        <h5>🎯 Goals for This Week</h5>
+                        <p>Clean E major chord, proper posture established</p>
+                    </div>
+
+                    <div class="track-info">
+                        <h5>⚠️ Common Issues</h5>
+                        <p>Muted strings (press harder, curve fingers), buzzing (check finger placement)</p>
+                    </div>
+
+                    <button class="complete-week-btn" onclick="completeWeek(1)">✅ Complete Week 1</button>
+
+                    <div class="week-navigation">
+                        <button class="nav-btn" disabled>← Previous Week</button>
+                        <button class="nav-btn" onclick="showWeek(2)">Next Week →</button>
+                    </div>
+                </div>
+
+                <!-- Additional week content will be dynamically generated -->
+            </main>
+        </div>
+    </div>
+
+    <script>
+        let currentWeek = 1;
+        let completedWeeks = JSON.parse(localStorage.getItem('completedWeeks') || '[]');
+
+        // Week data structure
+        const weekData = {
+            1: {
+                title: "Week 1: Basic Setup & E Major Chord",
+                subtitle: "Foundation Building - Getting Started",
+                practices: [
+                    {
+                        time: "Setup & Posture (5 minutes)",
+                        description: "Guitar strap height, sitting/standing position, pick grip (hold between thumb and index finger, firm but not tense)"
+                    },
+                    {
+                        time: "Fretting Hand Exercise (5 minutes)",
+                        description: "One finger per fret exercise (1st finger 1st fret, 2nd finger 2nd fret, etc.) on 6th string"
+                    },
+                    {
+                        time: "E Major Chord (10 minutes)",
+                        description: "Finger placement: 1st finger 3rd fret 5th string, 2nd finger 2nd fret 4th string, 3rd finger 1st fret 3rd string<br>Practice: 4 beats hold, 4 beats rest, repeat 20 times<br>Check each string rings clearly"
+                    },
+                    {
+                        time: "Cool Down (5 minutes)",
+                        description: "Gentle finger stretches, shake out tension"
+                    }
+                ],
+                goals: "Clean E major chord, proper posture established",
+                issues: "Muted strings (press harder, curve fingers), buzzing (check finger placement)",
+                totalTime: "20-25 minutes"
+            },
+            2: {
+                title: "Week 2: A Major Chord & First Changes",
+                subtitle: "Foundation Building - Getting Started",
+                practices: [
+                    {
+                        time: "Warm-up (5 minutes)",
+                        description: "Review E major, finger independence exercises"
+                    },
+                    {
+                        time: "A Major Chord (10 minutes)",
+                        description: "Finger placement: 1st, 2nd, 3rd fingers all on 2nd fret (4th, 3rd, 2nd strings respectively)<br>Practice clean chord, strum each string individually to check clarity"
+                    },
+                    {
+                        time: "Chord Changes (10 minutes)",
+                        description: "E major to A major: Start slow (one change every 4 seconds)<br>Count: '1-2-3-4-change' repeatedly<br>Goal: 10 clean changes in a row"
+                    },
+                    {
+                        time: "Strumming Introduction (5 minutes)",
+                        description: "Simple downstrokes, all 6 strings on E major"
+                    }
+                ],
+                goals: "Clean A major, basic E-A changes, first strumming",
+                track: "Simple E-A backing track at 60 BPM",
+                totalTime: "25-30 minutes"
+            }
+            // Additional weeks would be added here...
+        };
+
+        function updateProgress() {
+            const progressPercent = Math.round((completedWeeks.length / 104) * 100);
+            document.getElementById('progressFill').style.width = progressPercent + '%';
+            document.getElementById('completedWeeks').textContent = completedWeeks.length;
+            document.getElementById('currentWeek').textContent = currentWeek;
+            document.getElementById('progressPercent').textContent = progressPercent + '%';
+
+            // Update week item classes
+            for (let i = 1; i <= 104; i++) {
+                const weekItem = document.querySelector(`[onclick="showWeek(${i})"]`);
+                if (weekItem) {
+                    weekItem.classList.remove('completed', 'current');
+                    if (completedWeeks.includes(i)) {
+                        weekItem.classList.add('completed');
+                    } else if (i === currentWeek) {
+                        weekItem.classList.add('current');
+                    }
+                }
+            }
+        }
+
+        function showOverview() {
+            // Hide all week content
+            document.querySelectorAll('.week-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById('overview').style.display = 'block';
+        }
+
+        function showWeek(weekNumber) {
+            currentWeek = weekNumber;
+            
+            // Hide overview
+            document.getElementById('overview').style.display = 'none';
+            
+            // Hide all week content
+            document.querySelectorAll('.week-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Show specific week or create it
+            let weekElement = document.getElementById(`week${weekNumber}`);
+            if (!weekElement) {
+                weekElement = createWeekElement(weekNumber);
+            }
+            weekElement.classList.add('active');
+            
+            updateProgress();
+            
+            // Scroll to top
+            document.querySelector('.content-area').scrollTop = 0;
+            
+            // Close mobile sidebar
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        function createWeekElement(weekNumber) {
+            const data = weekData[weekNumber];
+            if (!data) {
+                // Create basic template for weeks without detailed data
+                return createBasicWeekElement(weekNumber);
+            }
+
+            const weekElement = document.createElement('div');
+            weekElement.id = `week${weekNumber}`;
+            weekElement.className = 'week-content';
+            
+            weekElement.innerHTML = `
+                <div class="week-header">
+                    <div class="week-title">${data.title}</div>
+                    <div class="week-subtitle">${data.subtitle}</div>
+                </div>
+
+                <div class="practice-section">
+                    <h4>🎯 Daily Practice Routine (${data.totalTime})</h4>
+                    ${data.practices.map(practice => `
+                        <div class="practice-item">
+                            <div class="practice-time">${practice.time}</div>
+                            <p>${practice.description}</p>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="goals-section">
+                    <h5>🎯 Goals for This Week</h5>
+                    <p>${data.goals}</p>
+                </div>
+
+                ${data.issues ? `
+                    <div class="track-info">
+                        <h5>⚠️ Common Issues</h5>
+                        <p>${data.issues}</p>
+                    </div>
+                ` : ''}
+
+                ${data.track ? `
+                    <div class="track-info">
+                        <h5>🎵 Practice Track</h5>
+                        <p>${data.track}</p>
+                    </div>
+                ` : ''}
+
+                <button class="complete-week-btn" onclick="completeWeek(${weekNumber})">✅ Complete Week ${weekNumber}</button>
+
+                <div class="week-navigation">
+                    <button class="nav-btn" ${weekNumber === 1 ? 'disabled' : `onclick="showWeek(${weekNumber - 1})"`}>← Previous Week</button>
+                    <button class="nav-btn" ${weekNumber === 104 ? 'disabled' : `onclick="showWeek(${weekNumber + 1})"`}>Next Week →</button>
+                </div>
+            `;
+
+            document.querySelector('.content-area').appendChild(weekElement);
+            return weekElement;
+        }
+
+        function createBasicWeekElement(weekNumber) {
+            const weekElement = document.createElement('div');
+            weekElement.id = `week${weekNumber}`;
+            weekElement.className = 'week-content';
+            
+            weekElement.innerHTML = `
+                <div class="week-header">
+                    <div class="week-title">Week ${weekNumber}</div>
+                    <div class="week-subtitle">Detailed content coming soon...</div>
+                </div>
+
+                <div class="practice-section">
+                    <h4>🎯 Week ${weekNumber} Practice</h4>
+                    <p>This week's detailed content is being prepared. Please refer to the full curriculum document for complete practice instructions.</p>
+                </div>
+
+                <button class="complete-week-btn" onclick="completeWeek(${weekNumber})">✅ Complete Week ${weekNumber}</button>
+
+                <div class="week-navigation">
+                    <button class="nav-btn" ${weekNumber === 1 ? 'disabled' : `onclick="showWeek(${weekNumber - 1})"`}>← Previous Week</button>
+                    <button class="nav-btn" ${weekNumber === 104 ? 'disabled' : `onclick="showWeek(${weekNumber + 1})"`}>Next Week →</button>
+                </div>
+            `;
+
+            document.querySelector('.content-area').appendChild(weekElement);
+            return weekElement;
+        }
+
+        function completeWeek(weekNumber) {
+            if (!completedWeeks.includes(weekNumber)) {
+                completedWeeks.push(weekNumber);
+                completedWeeks.sort((a, b) => a - b);
+                localStorage.setItem('completedWeeks', JSON.stringify(completedWeeks));
+                updateProgress();
+                
+                // Show next week if available
+                if (weekNumber < 104) {
+                    setTimeout(() => showWeek(weekNumber + 1), 500);
+                }
+            }
+        }
+
+        function goToCurrentWeek() {
+            // Find the first incomplete week
+            for (let i = 1; i <= 104; i++) {
+                if (!completedWeeks.includes(i)) {
+                    showWeek(i);
+                    return;
+                }
+            }
+            // If all weeks completed, go to final week
+            showWeek(104);
+        }
+
+        function togglePhase(phaseId) {
+            const phaseList = document.getElementById(phaseId);
+            phaseList.classList.toggle('active');
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+            showOverview();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        });
+    </script>
+</body>
+</html>
