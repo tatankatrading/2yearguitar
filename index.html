@@ -11,6 +11,55 @@
             box-sizing: border-box;
         }
 
+        // Export progress function
+        function exportProgress() {
+            const progressData = {
+                completedWeeks: completedWeeks,
+                currentWeek: currentWeek,
+                totalProgress: Math.round((completedWeeks.length / 104) * 100),
+                exportDate: new Date().toISOString(),
+                startDate: localStorage.getItem('startDate'),
+                stats: getWeekStats()
+            };
+            
+            const dataStr = JSON.stringify(progressData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'guitar-curriculum-progress.json';
+            link.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        // Import progress function
+        function importProgress(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const progressData = JSON.parse(e.target.result);
+                    completedWeeks = progressData.completedWeeks || [];
+                    currentWeek = progressData.currentWeek || 1;
+                    localStorage.setItem('completedWeeks', JSON.stringify(completedWeeks));
+                    
+                    if (progressData.startDate) {
+                        localStorage.setItem('startDate', progressData.startDate);
+                    }
+                    
+                    updateProgress();
+                    alert('Progress imported successfully! 🎸');
+                } catch (error) {
+                    alert('Error importing progress file. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
@@ -333,32 +382,121 @@
             font-size: 1rem;
         }
 
+        .chord-diagram {
+            margin-bottom: 1.5rem;
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .chord-diagram h5 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 0.3rem;
+        }
+
+        .chord-diagram pre {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.3;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            overflow-x: auto;
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .week-content h4 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .practice-item {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #3498db;
+            transition: all 0.2s ease;
+        }
+
+        .practice-item:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .milestone-highlight {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .milestone-highlight h5 {
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .technique-highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-left: 4px solid #ffd700;
+        }
+
+        .week-progress {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .week-progress:hover {
+            transform: scale(1.1);
+            background: #2980b9;
+        }
+
         @media (max-width: 768px) {
-            .main-content {
-                flex-direction: column;
+            .chord-diagram {
+                margin-bottom: 1rem;
             }
-
-            .sidebar {
-                width: 100%;
-                position: static;
-                max-height: none;
-                display: none;
+            
+            .chord-diagram pre {
+                font-size: 0.75rem;
+                padding: 0.8rem;
             }
-
-            .sidebar.mobile-open {
-                display: block;
-            }
-
-            .mobile-toggle {
-                display: block;
-            }
-
-            header h1 {
-                font-size: 1.8rem;
-            }
-
-            .content-area {
-                padding: 1rem;
+            
+            .week-progress {
+                bottom: 10px;
+                right: 10px;
+                width: 50px;
+                height: 50px;
+                font-size: 0.9rem;
             }
         }
 
@@ -425,10 +563,47 @@
                         </div>
                     </div>
 
+                    <h3>🔍 Search & Filters</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <input type="text" id="searchInput" placeholder="Search weeks..." style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 0.5rem;">
+                        <select id="phaseFilter" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 0.5rem;">
+                            <option value="">All Phases</option>
+                            <option value="1-8">Phase 1: Getting Started</option>
+                            <option value="9-16">Phase 2: Scale Introduction</option>
+                            <option value="17-24">Phase 3: Chord Expansion</option>
+                            <option value="25-32">Phase 4: Lead Development</option>
+                            <option value="33-40">Phase 5: Song Application</option>
+                            <option value="41-52">Phase 6: Intermediate Prep</option>
+                            <option value="53-60">Phase 7: Advanced Rhythm</option>
+                            <option value="61-68">Phase 8: Scale Mastery</option>
+                            <option value="69-76">Phase 9: Advanced Lead</option>
+                            <option value="77-84">Phase 10: Song Complexity</option>
+                            <option value="85-92">Phase 11: Music Theory</option>
+                            <option value="93-104">Phase 12: Performance</option>
+                        </select>
+                        <button class="nav-btn" onclick="clearFilters()" style="width: 100%; background: #6c757d;">Clear Filters</button>
+                    </div>
+
                     <h3>🗓️ Quick Navigation</h3>
                     <div style="margin-bottom: 1rem;">
                         <button class="nav-btn" onclick="showOverview()" style="width: 100%; margin-bottom: 0.5rem;">📖 Curriculum Overview</button>
-                        <button class="nav-btn" onclick="goToCurrentWeek()" style="width: 100%;">🎯 Go to Current Week</button>
+                        <button class="nav-btn" onclick="goToCurrentWeek()" style="width: 100%; margin-bottom: 0.5rem;">🎯 Go to Current Week</button>
+                        <button class="nav-btn" onclick="showProgressStats()" style="width: 100%; margin-bottom: 0.5rem; background: #9b59b6;">📊 Progress Stats</button>
+                        <button class="nav-btn" onclick="showPracticeLog()" style="width: 100%; margin-bottom: 0.5rem; background: #8e44ad;">📈 Practice Log</button>
+                        <button class="nav-btn" onclick="exportProgress()" style="width: 100%; margin-bottom: 0.5rem; background: #27ae60;">💾 Export Progress</button>
+                        <input type="file" id="importFile" accept=".json" onchange="importProgress(event)" style="display: none;">
+                        <button class="nav-btn" onclick="document.getElementById('importFile').click()" style="width: 100%; background: #e67e22;">📁 Import Progress</button>
+                    </div>
+
+                    <div style="background: #f8f9fa; padding: 0.8rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.85rem;">
+                        <strong>⌨️ Keyboard Shortcuts:</strong><br>
+                        ← → Navigate weeks<br>
+                        Space: Complete week<br>
+                        H: Home/Overview<br>
+                        G: Go to current week<br>
+                        S: Show progress stats<br>
+                        P: Practice log<br>
+                        T: Quick 25-min timer
                     </div>
                 </div>
 
@@ -698,14 +873,52 @@
                     </div>
 
                     <div class="phase-overview">
-                        <h3>📝 How to Use This Curriculum</h3>
+                        <h3>🎸 Getting Started</h3>
                         <ul>
-                            <li><strong>Daily Practice:</strong> Follow the detailed practice routines for each week</li>
-                            <li><strong>Progress Tracking:</strong> Mark weeks as complete using the "Complete Week" button</li>
-                            <li><strong>Flexibility:</strong> Spend extra time on challenging weeks if needed</li>
-                            <li><strong>Recording:</strong> Document your progress with recordings at milestone weeks</li>
-                            <li><strong>Patience:</strong> Focus on quality over speed - solid foundations enable advanced playing</li>
+                            <li><strong>Equipment Needed:</strong> Electric guitar, amplifier, guitar cable, picks, and metronome (or app)</li>
+                            <li><strong>Practice Space:</strong> Quiet area where you can practice regularly without interruption</li>
+                            <li><strong>Recording:</strong> Phone or computer for recording progress at milestone weeks</li>
+                            <li><strong>Patience:</strong> Remember that muscle memory takes time to develop</li>
                         </ul>
+                    </div>
+
+                    <div class="phase-overview">
+                        <h3>🎶 Learning Philosophy</h3>
+                        <ul>
+                            <li><strong>Quality over Quantity:</strong> 20 minutes of focused practice beats 2 hours of distracted playing</li>
+                            <li><strong>Consistency:</strong> Daily practice, even if brief, builds better habits than sporadic long sessions</li>
+                            <li><strong>Musical Expression:</strong> Technical skills serve musical expression, not the other way around</li>
+                            <li><strong>Personal Style:</strong> Use this curriculum as a foundation to develop your unique voice</li>
+                            <li><strong>Patience with Progress:</strong> Some weeks will feel easier than others - that's normal</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase-overview">
+                        <h3>🏆 Success Tips</h3>
+                        <ul>
+                            <li><strong>Record Yourself:</strong> Regular recordings help track progress and identify areas for improvement</li>
+                            <li><strong>Play with Others:</strong> Jam sessions and playing with other musicians accelerates learning</li>
+                            <li><strong>Listen Actively:</strong> Study the music you want to play - really listen to how it's constructed</li>
+                            <li><strong>Be Patient:</strong> Some techniques take months to develop properly - don't rush the process</li>
+                            <li><strong>Have Fun:</strong> If you're not enjoying it, adjust your approach or take a short break</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase-overview">
+                        <h3>📅 Time Management</h3>
+                        <ul>
+                            <li><strong>Daily Practice:</strong> Try to practice at the same time each day to build a habit</li>
+                            <li><strong>Break Time:</strong> Take a 5-minute break every 20-30 minutes to avoid fatigue</li>
+                            <li><strong>Weekly Reviews:</strong> Spend time each week reviewing what you've learned</li>
+                            <li><strong>Flexibility:</strong> If a week feels too challenging, spend extra time on it before moving forward</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase-overview">
+                        <h3>💭 Final Thoughts</h3>
+                        <p>This curriculum represents a comprehensive path to guitar mastery, but remember that music is ultimately about expression and joy. Use these lessons as a foundation, but don't be afraid to explore your own musical interests along the way. The goal isn't just to complete 104 weeks of lessons - it's to develop into a confident, expressive musician who can communicate through the guitar.</p>
+                        
+                        <p style="margin-top: 1rem;"><strong>Good luck on your musical journey! 🎸🎵</strong></p>
                     </div>
                 </div>
 
@@ -763,11 +976,298 @@
                 <!-- Additional week content will be dynamically generated -->
             </main>
         </div>
+        
+        <!-- Week Progress Indicator -->
+        <div class="week-progress" id="weekProgress" onclick="goToCurrentWeek()" title="Go to current week">
+            <span id="weekProgressText">1</span>
+        </div>
+
+        <!-- Footer -->
+        <footer style="background: #2c3e50; color: white; text-align: center; padding: 2rem; margin-top: 2rem;">
+            <div style="max-width: 800px; margin: 0 auto;">
+                <h3 style="margin-bottom: 1rem;">🎸 2-Year Guitar Curriculum</h3>
+                <p style="margin-bottom: 1rem; opacity: 0.9;">
+                    A comprehensive learning path from beginner to advanced intermediate guitarist with blues/rock focus.
+                </p>
+                <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
+                    <p>Built with passion for guitar education | Practice consistently, play with heart 🎵</p>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <script>
         let currentWeek = 1;
         let completedWeeks = JSON.parse(localStorage.getItem('completedWeeks') || '[]');
+
+        // Chord diagrams
+        const chordDiagrams = {
+            'E major': `
+E Major:
+   0 2 2 1 0 0
+   | | | | | |
+   E A D G B E
+   
+   e |---|---|---|
+   B |---|---|---|
+   G |-●-|---|---|
+   D |---|-●-|---|
+   A |---|-●-|---|
+   E |---|---|---|
+      1   2   3`,
+            
+            'A major': `
+A Major:
+   X 0 2 2 2 0
+   | | | | | |
+   E A D G B E
+   
+   e |---|---|---|
+   B |---|-●-|---|
+   G |---|-●-|---|
+   D |---|-●-|---|
+   A |---|---|---|
+   E | X |---|---|
+      1   2   3`,
+            
+            'D major': `
+D Major:
+   X X 0 2 3 2
+   | | | | | |
+   E A D G B E
+   
+   e |---|-●-|---|
+   B |---|---|-●-|
+   G |---|-●-|---|
+   D |---|---|---|
+   A | X |---|---|
+   E | X |---|---|
+      1   2   3`,
+            
+            'A5': `
+A5 Power Chord:
+   5   7
+   |   |
+   E   A
+   
+   e |---|---|---|
+   B |---|---|---|
+   G |---|---|---|
+   D |---|---|---|
+   A |---|---|-●-| 7th fret
+   E |-●-|---|---| 5th fret
+      1       3`,
+            
+            'E5': `
+E5 Power Chord:
+   0   2
+   |   |
+   E   A
+   
+   e |---|---|---|
+   B |---|---|---|
+   G |---|---|---|
+   D |---|---|---|
+   A |---|-●-|---|
+   E |---|---|---|
+      1   2   3`,
+            
+            'Am': `
+A Minor:
+   X 0 2 2 1 0
+   | | | | | |
+   E A D G B E
+   
+   e |---|---|---|
+   B |-●-|---|---|
+   G |---|-●-|---|
+   D |---|-●-|---|
+   A |---|---|---|
+   E | X |---|---|
+      1   2   3`,
+            
+            'Em': `
+E Minor:
+   0 2 2 0 0 0
+   | | | | | |
+   E A D G B E
+   
+   e |---|---|---|
+   B |---|---|---|
+   G |---|---|---|
+   D |---|-●-|---|
+   A |---|-●-|---|
+   E |---|---|---|
+      1   2   3`,
+            
+            'F major': `
+F Major (Barre):
+   1 3 3 2 1 1
+   | | | | | |
+   E A D G B E
+   
+   e |-●-|---|---| Barre 1st fret
+   B |-●-|---|---|
+   G |---|-●-|---|
+   D |---|---|-●-|
+   A |---|---|-●-|
+   E |-●-|---|---|
+      1   2   3   4`,
+            
+            'A7': `
+A7:
+   X 0 2 0 2 0
+   | | | | | |
+   E A D G B E
+   
+   e |---|---|---|
+   B |---|-●-|---|
+   G |---|---|---|
+   D |---|-●-|---|
+   A |---|---|---|
+   E | X |---|---|
+      1   2   3`,
+            
+            'D7': `
+D7:
+   X X 0 2 1 2
+   | | | | | |
+   E A D G B E
+   
+   e |---|-●-|---|
+   B |-●-|---|---|
+   G |---|-●-|---|
+   D |---|---|---|
+   A | X |---|---|
+   E | X |---|---|
+      1   2   3`,
+            
+            'E7': `
+E7:
+   0 2 0 1 0 0
+   | | | | | |
+   E A D G B E
+   
+   e |---|---|---|
+   B |---|---|---|
+   G |-●-|---|---|
+   D |---|---|---|
+   A |---|-●-|---|
+   E |---|---|---|
+      1   2   3`,
+            
+            'Dm': `
+D Minor:
+   X X 0 2 3 1
+   | | | | | |
+   E A D G B E
+   
+   e |-●-|---|---|
+   B |---|---|-●-|
+   G |---|-●-|---|
+   D |---|---|---|
+   A | X |---|---|
+   E | X |---|---|
+      1   2   3`,
+            
+            'G major': `
+G Major:
+   3 2 0 0 3 3
+   | | | | | |
+   E A D G B E
+   
+   e |---|---|-●-|
+   B |---|---|---|
+   G |---|---|---|
+   D |---|---|---|
+   A |---|-●-|---|
+   E |---|---|-●-|
+      1   2   3`,
+            
+            'C major': `
+C Major:
+   X 3 2 0 1 0
+   | | | | | |
+   E A D G B E
+   
+   e |---|---|---|
+   B |-●-|---|---|
+   G |---|---|---|
+   D |---|-●-|---|
+   A |---|---|-●-|
+   E | X |---|---|
+      1   2   3`,
+            
+            'Am7': `
+A Minor 7:
+   X 0 2 0 1 0
+   | | | | | |
+   E A D G B E
+   
+   e |---|---|---|
+   B |-●-|---|---|
+   G |---|---|---|
+   D |---|-●-|---|
+   A |---|---|---|
+   E | X |---|---|
+      1   2   3`,
+            
+            'Em7': `
+E Minor 7:
+   0 2 2 0 3 0
+   | | | | | |
+   E A D G B E
+   
+   e |---|---|---|
+   B |---|---|-●-|
+   G |---|---|---|
+   D |---|-●-|---|
+   A |---|-●-|---|
+   E |---|---|---|
+      1   2   3`,
+            
+            'Cmaj7': `
+C Major 7:
+   X 3 2 0 0 0
+   | | | | | |
+   E A D G B E
+   
+   e |---|---|---|
+   B |---|---|---|
+   G |---|---|---|
+   D |---|-●-|---|
+   A |---|---|-●-|
+   E | X |---|---|
+      1   2   3`,
+            
+            'G5': `
+G5 Power Chord:
+   3   5
+   |   |
+   E   A
+   
+   e |---|---|---|
+   B |---|---|---|
+   G |---|---|---|
+   D |---|---|---|
+   A |---|---|---| 5th fret
+   E |---|---|-●-| 3rd fret
+      1       3`,
+            
+            'D5': `
+D5 Power Chord:
+   X X 0   2
+   | | |   |
+   E A D   A
+   
+   e |---|---|---|
+   B |---|---|---|
+   G |---|---|---|
+   D |---|---|---|
+   A |---|-●-|---|
+   E | X |---|---|
+      1   2   3`
+        };
 
         // Week data structure
         const weekData = {
@@ -794,6 +1294,7 @@
                 ],
                 goals: "Clean E major chord, proper posture established",
                 issues: "Muted strings (press harder, curve fingers), buzzing (check finger placement)",
+                chords: ['E major'],
                 totalTime: "20-25 minutes"
             },
             2: {
@@ -819,10 +1320,1320 @@
                 ],
                 goals: "Clean A major, basic E-A changes, first strumming",
                 track: "Simple E-A backing track at 60 BPM",
+                chords: ['A major'],
                 totalTime: "25-30 minutes"
+            },
+            3: {
+                title: "Week 3: D Major & Power Chord Introduction",
+                subtitle: "Foundation Building - Getting Started",
+                practices: [
+                    {
+                        time: "Warm-up (5 minutes)",
+                        description: "E-A chord changes, aim for smoother transitions"
+                    },
+                    {
+                        time: "D Major Chord (8 minutes)",
+                        description: "Finger placement: 1st finger 2nd fret 1st string, 2nd finger 2nd fret 3rd string, 3rd finger 3rd fret 2nd string<br>Only strum strings 1-4 (avoid 5th and 6th strings)"
+                    },
+                    {
+                        time: "Three-Chord Progression (10 minutes)",
+                        description: "E-A-D progression: 4 beats each chord<br>Focus on clean changes, don't worry about speed yet"
+                    },
+                    {
+                        time: "Power Chord Introduction (7 minutes)",
+                        description: "A5 power chord: 1st finger 5th fret 6th string, 3rd finger 7th fret 5th string<br>Practice clean two-note sound, mute other strings with palm"
+                    }
+                ],
+                goals: "Clean D major, basic three-chord progression, first power chord",
+                issues: "D major - avoid hitting bottom strings, power chords - mute unwanted strings",
+                chords: ['D major', 'A5'],
+                totalTime: "30 minutes"
+            },
+            4: {
+                title: "Week 4: Power Chord Expansion",
+                subtitle: "Foundation Building - Getting Started",
+                practices: [
+                    {
+                        time: "Warm-up (5 minutes)",
+                        description: "Major chord review (E-A-D progression)"
+                    },
+                    {
+                        time: "5th String Root Power Chords (12 minutes)",
+                        description: "A5 (5th fret), B5 (7th fret), C5 (8th fret)<br>Practice moving between these positions<br>Use metronome at 60 BPM: 4 beats per chord"
+                    },
+                    {
+                        time: "6th String Root Power Chords (10 minutes)",
+                        description: "E5 (open), F5 (1st fret), G5 (3rd fret)<br>Same finger pattern as 5th string roots"
+                    },
+                    {
+                        time: "Basic Palm Muting (8 minutes)",
+                        description: "Rest palm edge lightly on bridge near strings<br>Practice with E5 power chord: muted vs. open sound<br>Alternate: 4 muted hits, 4 open hits"
+                    }
+                ],
+                goals: "Solid power chord technique, basic palm muting",
+                track: "Simple power chord progression backing track",
+                chords: ['E5', 'A5'],
+                totalTime: "30-35 minutes"
+            },
+            5: {
+                title: "Week 5: Rhythm Foundation",
+                subtitle: "Foundation Building - Getting Started",
+                practices: [
+                    {
+                        time: "Warm-up (5 minutes)",
+                        description: "Power chord review"
+                    },
+                    {
+                        time: "Metronome Work (10 minutes)",
+                        description: "Set to 60 BPM, practice hitting beat exactly<br>Count '1-2-3-4' out loud while playing E5<br>Gradually increase to 80 BPM"
+                    },
+                    {
+                        time: "Down-stroke Rhythm (15 minutes)",
+                        description: "Simple 4/4 pattern: Down-Down-Down-Down<br>Practice with E5, A5, D5 power chords<br>8 beats per chord, focus on consistency"
+                    },
+                    {
+                        time: "Rhythm Pattern Practice (5 minutes)",
+                        description: "Pattern: Down-rest-Down-Down<br>Count: '1-(2)-3-4'<br>Apply to power chord progression"
+                    }
+                ],
+                goals: "Steady rhythm, metronome comfort, consistent downstrokes",
+                essential: "Playing in time is more important than speed",
+                totalTime: "35 minutes"
+            },
+            6: {
+                title: "Week 6: Up-stroke Introduction",
+                subtitle: "Foundation Building - Getting Started",
+                practices: [
+                    {
+                        time: "Warm-up (5 minutes)",
+                        description: "Down-stroke patterns review"
+                    },
+                    {
+                        time: "Up-stroke Technique (10 minutes)",
+                        description: "Practice isolated upstrokes: lighter touch than downstrokes<br>Up-stroke hits strings from high to low (opposite of down)<br>Practice: Down-Up-Down-Up pattern slowly"
+                    },
+                    {
+                        time: "Down-Up Patterns (15 minutes)",
+                        description: "Basic pattern: Down-Up-Down-Up (8th notes)<br>Start at 60 BPM, count '1-and-2-and-3-and-4-and'<br>Apply to E5-A5 power chord changes"
+                    },
+                    {
+                        time: "Strumming with Open Chords (10 minutes)",
+                        description: "Apply Down-Up pattern to E major-A major changes<br>Focus on hitting all strings cleanly on downstrokes"
+                    }
+                ],
+                goals: "Clean up-strokes, basic 8th note feel, down-up coordination",
+                track: "8th note rock backing track at 70 BPM",
+                totalTime: "35-40 minutes"
+            },
+            7: {
+                title: "Week 7: Minor Chords Introduction",
+                subtitle: "Foundation Building - Getting Started",
+                practices: [
+                    {
+                        time: "Warm-up (5 minutes)",
+                        description: "Down-Up strumming review"
+                    },
+                    {
+                        time: "A Minor Chord (10 minutes)",
+                        description: "Same as A major but remove 1st finger (2nd finger 2nd fret 4th string, 3rd finger 2nd fret 3rd string)<br>Compare sound to A major - hear the minor quality"
+                    },
+                    {
+                        time: "E Minor Chord (10 minutes)",
+                        description: "2nd finger 2nd fret 5th string, 3rd finger 2nd fret 4th string<br>All strings can be played (very guitar-friendly chord)"
+                    },
+                    {
+                        time: "Minor Chord Progressions (10 minutes)",
+                        description: "Am-Em progression: 8 beats each<br>Em-Am-Em-Am with Down-Up strumming"
+                    },
+                    {
+                        time: "Major vs Minor (5 minutes)",
+                        description: "Compare A major vs A minor<br>Compare E major vs E minor<br>Listen for emotional difference"
+                    }
+                ],
+                goals: "Clean minor chords, understanding major vs minor sound",
+                track: "Minor key backing track for emotional contrast",
+                chords: ['Am', 'Em'],
+                totalTime: "40 minutes"
+            },
+            8: {
+                title: "Week 8: 12-Bar Blues Foundation",
+                subtitle: "Foundation Building - Getting Started",
+                practices: [
+                    {
+                        time: "Warm-up (5 minutes)",
+                        description: "Major and minor chord review"
+                    },
+                    {
+                        time: "Blues Chord Progression (15 minutes)",
+                        description: "12-Bar Blues in A: A-A-A-A-D-D-A-A-E-D-A-E<br>Use power chords: A5-A5-A5-A5-D5-D5-A5-A5-E5-D5-A5-E5<br>4 beats per chord, very slow at first"
+                    },
+                    {
+                        time: "Blues Strumming (12 minutes)",
+                        description: "Simple Down-Down-Down-Down pattern<br>Focus on chord changes being exactly on beat 1<br>Count bars out loud: 'Bar 1, Bar 2...' etc."
+                    },
+                    {
+                        time: "Blues Feel Introduction (8 minutes)",
+                        description: "Add slight palm muting for grittier sound<br>Slightly emphasize beat 1 and 3"
+                    },
+                    {
+                        time: "D Minor Chord (5 minutes)",
+                        description: "1st finger 1st fret 1st string, 2nd finger 2nd fret 3rd string, 3rd finger 3rd fret 2nd string<br>Only strum top 4 strings"
+                    }
+                ],
+                goals: "Understanding 12-bar structure, clean chord changes in time",
+                track: "Slow 12-bar blues in A (80 BPM)",
+                totalTime: "40-45 minutes"
+            },
+            9: {
+                title: "Week 9: A Minor Pentatonic Scale",
+                subtitle: "Scale Introduction - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "12-bar blues review"
+                    },
+                    {
+                        time: "Scale Introduction (15 minutes)",
+                        description: "A minor pentatonic (5th fret position):<br>6th string: 5th-8th fret<br>5th string: 5th-7th fret<br>4th string: 5th-7th fret<br>3rd string: 5th-7th fret<br>2nd string: 5th-8th fret<br>1st string: 5th-8th fret"
+                    },
+                    {
+                        time: "Scale Practice (15 minutes)",
+                        description: "Play ascending slowly: one note per beat at 60 BPM<br>Focus on clean fretting, avoid buzzing<br>Use alternate picking: down-up-down-up"
+                    },
+                    {
+                        time: "Scale Application (7 minutes)",
+                        description: "Play scale over A minor backing track<br>Just play the notes in order, focus on timing"
+                    }
+                ],
+                goals: "Memorize pentatonic pattern, clean single-note technique",
+                track: "A minor backing track for scale practice",
+                totalTime: "45 minutes"
+            },
+            10: {
+                title: "Week 10: Simple Pentatonic Licks",
+                subtitle: "Scale Introduction - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "A minor pentatonic ascending/descending"
+                    },
+                    {
+                        time: "First Lick (12 minutes)",
+                        description: "Lick: 5th fret 3rd string, 7th fret 3rd string, 5th fret 2nd string<br>Practice slowly with metronome<br>Repeat lick 4 times, then rest 4 beats"
+                    },
+                    {
+                        time: "Bend Introduction (10 minutes)",
+                        description: "Half-step bend: 7th fret 3rd string, bend up slightly<br>Support bending finger with other fingers<br>Bend up, release down - controlled motion"
+                    },
+                    {
+                        time: "Lick Combination (10 minutes)",
+                        description: "Combine scale notes with simple bend<br>Create 2-bar phrases using pentatonic notes"
+                    },
+                    {
+                        time: "Blues Application (5 minutes)",
+                        description: "Play licks over 12-bar blues backing track<br>Focus on starting licks on beat 1"
+                    }
+                ],
+                goals: "First blues licks, basic bending, musical phrasing",
+                track: "A blues backing track for improvisation",
+                totalTime: "45 minutes"
+            },
+            11: {
+                title: "Week 11: Alternate Picking Development",
+                subtitle: "Scale Introduction - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Pentatonic scale with focus on pick direction"
+                    },
+                    {
+                        time: "Alternate Picking Exercises (15 minutes)",
+                        description: "Single string exercises: Down-Up-Down-Up on each string<br>Start at 60 BPM, increase gradually to 80 BPM<br>Focus on pick hitting string at same angle each time"
+                    },
+                    {
+                        time: "Chromatic Runs (12 minutes)",
+                        description: "6th string: 5th-6th-7th-8th fret with fingers 1-2-3-4<br>Use strict alternate picking<br>Move to 5th string, repeat pattern"
+                    },
+                    {
+                        time: "Scale with Alternate Picking (10 minutes)",
+                        description: "A minor pentatonic with strict down-up picking<br>Count pick direction out loud: 'Down-Up-Down-Up'"
+                    },
+                    {
+                        time: "String Skipping Introduction (5 minutes)",
+                        description: "Skip from 6th string to 4th string (skip 5th)<br>Practice controlled pick movement"
+                    }
+                ],
+                goals: "Consistent alternate picking, pick control, accuracy over speed",
+                essential: "Clean picking is more important than fast picking",
+                totalTime: "45-50 minutes"
+            },
+            12: {
+                title: "Week 12: Lead Guitar Posture & Hand Position",
+                subtitle: "Scale Introduction - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Chromatic exercises with alternate picking"
+                    },
+                    {
+                        time: "Lead Posture Adjustment (10 minutes)",
+                        description: "Guitar neck higher for lead playing<br>Thumb behind neck (not wrapped around)<br>Fingers more perpendicular to fretboard"
+                    },
+                    {
+                        time: "Finger Independence (12 minutes)",
+                        description: "Hold down 1st finger 5th fret, hammer 2nd finger 6th fret<br>Hold 1st and 2nd, hammer 3rd finger 7th fret<br>Hold 1st, 2nd, 3rd, hammer 4th finger 8th fret<br>Practice on each string"
+                    },
+                    {
+                        time: "Lead Guitar Exercises (15 minutes)",
+                        description: "Pentatonic scale with improved posture<br>Focus on finger economy - minimal movement<br>Each finger stays close to assigned fret"
+                    },
+                    {
+                        time: "Single String Melodies (5 minutes)",
+                        description: "Create simple melodies using just 3rd string<br>Use pentatonic notes only"
+                    }
+                ],
+                goals: "Proper lead technique setup, finger independence, economy of motion",
+                essential: "Good technique prevents injury and enables faster playing later",
+                totalTime: "50 minutes"
+            },
+            13: {
+                title: "Week 13: E Minor Pentatonic (Open Position)",
+                subtitle: "Scale Introduction - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "A minor pentatonic review"
+                    },
+                    {
+                        time: "E Minor Pentatonic Pattern (15 minutes)",
+                        description: "Open position (0th fret area):<br>6th string: open, 3rd fret<br>5th string: 2nd, 3rd fret<br>4th string: open, 2nd fret<br>3rd string: open, 2nd fret<br>2nd string: open, 3rd fret<br>1st string: open, 3rd fret"
+                    },
+                    {
+                        time: "Pattern Practice (12 minutes)",
+                        description: "Play slowly, memorize thoroughly<br>Notice how some notes are open strings<br>Use alternate picking throughout"
+                    },
+                    {
+                        time: "Two-Position Connection (10 minutes)",
+                        description: "Play E minor pentatonic, then move to A minor pentatonic<br>Understand they're the same scale in different positions"
+                    },
+                    {
+                        time: "Improvisation Practice (5 minutes)",
+                        description: "Jam over E minor backing track<br>Use simple note choices, focus on rhythm"
+                    }
+                ],
+                goals: "Second pentatonic position, understanding scale connections",
+                track: "E minor blues backing track",
+                totalTime: "50 minutes"
+            },
+            14: {
+                title: "Week 14: Connecting Pentatonic Positions",
+                subtitle: "Scale Introduction - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Both pentatonic positions separately"
+                    },
+                    {
+                        time: "Position Connection (15 minutes)",
+                        description: "Start in open E minor pentatonic<br>Slide from 3rd fret to 5th fret positions<br>Practice smooth transitions between positions"
+                    },
+                    {
+                        time: "Extended Scale Runs (12 minutes)",
+                        description: "Play from open position up to 8th fret using both patterns<br>Descend from 8th fret back to open<br>Focus on seamless position changes"
+                    },
+                    {
+                        time: "Simple Bends in Each Position (10 minutes)",
+                        description: "Open position: bend 3rd fret on 2nd string<br>5th position: bend 7th fret on 3rd string<br>Practice controlled, in-tune bends"
+                    },
+                    {
+                        time: "Musical Application (5 minutes)",
+                        description: "Create licks that use both positions<br>Focus on melodic connection between positions"
+                    }
+                ],
+                goals: "Fluid position changes, extended range playing, musical continuity",
+                essential: "Think of it as one long scale, not separate patterns",
+                totalTime: "50 minutes"
+            },
+            15: {
+                title: "Week 15: Blues Scale Introduction",
+                subtitle: "Scale Introduction - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Connected pentatonic positions"
+                    },
+                    {
+                        time: "Blues Scale Theory (5 minutes)",
+                        description: "Blues scale = minor pentatonic + flat 5th (blue note)<br>In A minor pentatonic, add D# (6th fret on 5th string, 9th fret on 6th string)"
+                    },
+                    {
+                        time: "Blues Scale Practice (15 minutes)",
+                        description: "A blues scale in 5th position with added blue note<br>Practice blue note bends: bend 6th fret 5th string up to 7th fret pitch<br>Focus on that distinctive 'bluesy' sound"
+                    },
+                    {
+                        time: "Blue Note Licks (12 minutes)",
+                        description: "Simple lick: 5th fret, 6th fret bend, 5th fret on 5th string<br>Practice bending blue note and releasing<br>Combine with pentatonic notes"
+                    },
+                    {
+                        time: "Blues Context (10 minutes)",
+                        description: "Play blues scale over 12-bar blues in A<br>Emphasize blue note over the A chord for maximum effect<br>Notice how blue note creates tension and resolution"
+                    }
+                ],
+                goals: "Understanding blues scale, basic blue note bends, blues tonality",
+                track: "Slow 12-bar blues in A for blues scale practice",
+                totalTime: "50 minutes"
+            },
+            16: {
+                title: "Week 16: Classic Blues Licks",
+                subtitle: "Scale Introduction - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Blues scale with blue note bends"
+                    },
+                    {
+                        time: "Classic Lick #1 (12 minutes)",
+                        description: "'Box lick': 5th fret-8th fret-5th fret on 1st string, then 5th fret 2nd string<br>Practice slowly, focus on clean execution<br>Add slight bend to 8th fret note"
+                    },
+                    {
+                        time: "Classic Lick #2 (12 minutes)",
+                        description: "'Turnaround lick': 8th fret 1st string, 5th fret 1st string, 7th fret 2nd string, 5th fret 2nd string<br>Works perfectly at end of 12-bar progression"
+                    },
+                    {
+                        time: "Lick Combination (10 minutes)",
+                        description: "Chain licks together over 12-bar blues<br>Practice placing licks at appropriate moments<br>Leave space between licks - silence is musical too"
+                    },
+                    {
+                        time: "Call and Response (8 minutes)",
+                        description: "Play a lick, leave space, play response lick<br>Develop musical conversation concept"
+                    },
+                    {
+                        time: "Personal Style (5 minutes)",
+                        description: "Experiment with slight variations of learned licks<br>Change timing, add/remove notes"
+                    }
+                ],
+                goals: "Core blues vocabulary, musical phrasing, personal expression",
+                track: "Various 12-bar blues tracks for lick application",
+                totalTime: "50-55 minutes"
+            },
+            17: {
+                title: "Week 17: F Major Barre Chord Preparation",
+                subtitle: "Chord Expansion - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Open chord review (E, A, D majors)"
+                    },
+                    {
+                        time: "Finger Strength Exercises (10 minutes)",
+                        description: "Press all six strings at 1st fret with 1st finger<br>Hold for 10 seconds, release, repeat 10 times<br>Focus on straight finger, adequate pressure"
+                    },
+                    {
+                        time: "Partial F Chord (15 minutes)",
+                        description: "F major using only strings 1-4: 1st finger barres 1st fret, other fingers like E major shape moved up<br>1st finger 1st fret (all strings), 2nd finger 2nd fret 3rd string, 3rd finger 3rd fret 5th string, 4th finger 3rd fret 4th string<br>Strum only top 4 strings initially"
+                    },
+                    {
+                        time: "Barre Technique (12 minutes)",
+                        description: "Check thumb position (behind 2nd fret area)<br>1st finger side (not pad) contacts strings<br>Apply pressure gradually, check each string rings"
+                    },
+                    {
+                        time: "F Chord Transitions (10 minutes)",
+                        description: "Practice F to C (easier transition)<br>Very slow changes, focus on maintaining barre"
+                    }
+                ],
+                goals: "Basic barre chord technique, finger strength, simplified F major",
+                issues: "Muted strings (finger position), hand fatigue (take breaks)",
+                chords: ['F major'],
+                totalTime: "55 minutes"
+            },
+            18: {
+                title: "Week 18: 6th String Root Barre Chords",
+                subtitle: "Chord Expansion - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "F major practice, finger strengthening"
+                    },
+                    {
+                        time: "Barre Chord Theory (5 minutes)",
+                        description: "6th string root barre chords based on E major shape<br>Root note (chord name) is on 6th string under 1st finger"
+                    },
+                    {
+                        time: "F, G, A Barre Majors (18 minutes)",
+                        description: "F major (1st fret), G major (3rd fret), A major (5th fret)<br>Practice each chord separately for clean sound<br>6 minutes per chord: setup, hold, check each string"
+                    },
+                    {
+                        time: "Barre Chord Progression (15 minutes)",
+                        description: "F-G-A progression using barre chords<br>8 beats per chord, very slow tempo<br>Focus on maintaining barre while changing chords"
+                    },
+                    {
+                        time: "Mixed Chord Practice (9 minutes)",
+                        description: "Combine open chords with barre chords<br>C major (open) to F major (barre) - common progression<br>Practice smooth transitions"
+                    }
+                ],
+                goals: "Three solid 6th string barre chords, basic progressions",
+                track: "Barre chord backing track in F major",
+                totalTime: "55 minutes"
+            },
+            19: {
+                title: "Week 19: 5th String Root Barre Chords",
+                subtitle: "Chord Expansion - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "6th string barre chord review"
+                    },
+                    {
+                        time: "5th String Barre Theory (5 minutes)",
+                        description: "Based on A major shape, root on 5th string<br>1st finger barres across 5 strings (not 6th string)"
+                    },
+                    {
+                        time: "C, D, E Barre Majors (18 minutes)",
+                        description: "C major (3rd fret), D major (5th fret), E major (7th fret)<br>Finger pattern: 1st finger barre, other fingers form A major shape<br>Don't hit 6th string (mute with 1st finger tip)"
+                    },
+                    {
+                        time: "5th String Barre Practice (15 minutes)",
+                        description: "C-D-E progression using 5th string barres<br>Compare sound to 6th string barres - different voicing"
+                    },
+                    {
+                        time: "Combining Barre Types (9 minutes)",
+                        description: "Mix 6th and 5th string barre chords<br>F (6th string) to C (5th string) - common change<br>Practice efficient finger movement"
+                    }
+                ],
+                goals: "5th string barre chord mastery, chord voicing awareness",
+                essential: "5th string barres often sound fuller for rhythm guitar",
+                totalTime: "55 minutes"
+            },
+            20: {
+                title: "Week 20: Minor Barre Chords",
+                subtitle: "Chord Expansion - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Major barre chord review (both types)"
+                    },
+                    {
+                        time: "6th String Minor Barres (15 minutes)",
+                        description: "Fm (1st fret), Gm (3rd fret), Am (5th fret)<br>Same as major barre but remove 2nd finger<br>Based on Em shape moved up the neck"
+                    },
+                    {
+                        time: "5th String Minor Barres (15 minutes)",
+                        description: "Cm (3rd fret), Dm (5th fret), Em (7th fret)<br>Based on Am shape, 1st finger barres 5 strings"
+                    },
+                    {
+                        time: "Major vs Minor Comparison (10 minutes)",
+                        description: "Play F major then Fm - hear the difference<br>Play C major then Cm - emotional contrast<br>Understand how one finger changes the mood"
+                    },
+                    {
+                        time: "Minor Progressions (7 minutes)",
+                        description: "Am-Dm-Gm progression using barre chords<br>Notice darker, more emotional sound"
+                    }
+                ],
+                goals: "Complete barre chord system (major and minor), emotional chord awareness",
+                track: "Minor key progression for emotional playing",
+                totalTime: "55 minutes"
+            },
+            21: {
+                title: "Week 21: Dominant 7th Chords",
+                subtitle: "Chord Expansion - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Barre chord review (major and minor)"
+                    },
+                    {
+                        time: "Open 7th Chords (15 minutes)",
+                        description: "A7: A major but remove 3rd finger, add 4th finger 3rd fret 2nd string<br>D7: D major but remove 3rd finger, add 4th finger 3rd fret 1st string<br>E7: E major but add 4th finger 3rd fret 2nd string"
+                    },
+                    {
+                        time: "7th Chord Sound (8 minutes)",
+                        description: "Compare A major to A7 - hear the added tension<br>Dominant 7th wants to resolve (A7 wants to go to D)"
+                    },
+                    {
+                        time: "Blues with 7th Chords (15 minutes)",
+                        description: "12-bar blues using A7-D7-E7 instead of power chords<br>Notice more sophisticated, jazzy blues sound<br>Practice chord changes cleanly"
+                    },
+                    {
+                        time: "7th Chord Strumming (9 minutes)",
+                        description: "Apply different strumming patterns to 7th chords<br>Focus on letting chords ring clearly"
+                    }
+                ],
+                goals: "Essential 7th chords, blues harmony upgrade, chord resolution understanding",
+                track: "12-bar blues progression with 7th chords",
+                chords: ['A7', 'D7', 'E7'],
+                totalTime: "55 minutes"
+            },
+            23: {
+                title: "Week 23: Advanced Rhythm Patterns",
+                subtitle: "Chord Expansion - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Extended chord review"
+                    },
+                    {
+                        time: "Reggae Skank (15 minutes)",
+                        description: "Off-beat chord hits: rest-DOWN-rest-DOWN (on beats 2 and 4)<br>Practice with A major chord<br>Use light, crisp downstrokes<br>Count: '1-(hit)-3-(hit)' with palm muting"
+                    },
+                    {
+                        time: "Funk Strumming (15 minutes)",
+                        description: "Pattern: DOWN-up-rest-up-DOWN-up-rest-up<br>Heavy palm muting throughout<br>Practice with E7 chord for funky sound<br>Focus on percussive attack"
+                    },
+                    {
+                        time: "16th Note Patterns (12 minutes)",
+                        description: "Basic 16th pattern: DOWN-up-down-UP (emphasize caps)<br>Count: '1-e-and-a-2-e-and-a'<br>Start very slowly, build up gradually"
+                    },
+                    {
+                        time: "Pattern Application (5 minutes)",
+                        description: "Apply new patterns to chord progressions<br>Choose pattern that fits song's style"
+                    }
+                ],
+                goals: "Rhythmic diversity, style-specific strumming, groove development",
+                track: "Reggae and funk backing tracks for pattern practice",
+                chords: ['E7'],
+                totalTime: "55 minutes"
+            },
+            24: {
+                title: "Week 24: Muted Strums & Percussive Techniques",
+                subtitle: "Chord Expansion - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Advanced rhythm pattern review"
+                    },
+                    {
+                        time: "Muted Strum Technique (15 minutes)",
+                        description: "Lightly touch strings with fretting hand without pressing down<br>Creates percussive 'chunk' sound<br>Practice pattern: DOWN-chunk-DOWN-chunk"
+                    },
+                    {
+                        time: "Percussive Strumming (15 minutes)",
+                        description: "Combine muted and open strums<br>Pattern: DOWN-chunk-up-DOWN-chunk-up<br>Creates rhythmic interest and dynamics"
+                    },
+                    {
+                        time: "Advanced Muting (12 minutes)",
+                        description: "Palm muting combined with fretting hand muting<br>Different textures: full mute, partial mute, open<br>Practice with power chord progressions"
+                    },
+                    {
+                        time: "Style Integration (5 minutes)",
+                        description: "Apply percussive techniques to different genres<br>Rock: aggressive muting, Funk: crisp chunks"
+                    }
+                ],
+                goals: "Percussive guitar techniques, textural variety, rhythmic sophistication",
+                essential: "Muting is as important as playing notes",
+                totalTime: "55 minutes"
+            },
+            26: {
+                title: "Week 26: Full-Step Bending",
+                subtitle: "Lead Development - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Half-step bend review, accuracy check"
+                    },
+                    {
+                        time: "Full-Step Bend Technique (15 minutes)",
+                        description: "Bend 7th fret 3rd string up two semitones (to 9th fret pitch)<br>Requires more finger strength and wrist rotation<br>Support with multiple fingers, use whole hand"
+                    },
+                    {
+                        time: "Bend Strength Building (12 minutes)",
+                        description: "Practice full bends on different strings<br>2nd string 8th fret (easier), 3rd string 7th fret (standard)<br>Hold bend for increasing durations"
+                    },
+                    {
+                        time: "Bend and Release Technique (15 minutes)",
+                        description: "Smooth bend up to pitch, then controlled release<br>No 'falling off' the note - controlled descent<br>Practice with metronome: bend on beat 1, release on beat 3"
+                    },
+                    {
+                        time: "Advanced Bend Licks (10 minutes)",
+                        description: "Classic lick: 5th fret-7th fret bend (full step)-5th fret on 3rd string<br>B.B. King style: bend, hold, slight vibrato, release"
+                    }
+                ],
+                goals: "Controlled full-step bends, strength building, classic lick vocabulary",
+                track: "B.B. King style backing track",
+                milestone: "Perform 3 complete songs (rhythm + lead)",
+                totalTime: "60 minutes"
+            },
+            30: {
+                title: "Week 30: Advanced Legato Playing",
+                subtitle: "Lead Development - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Basic hammer-on and pull-off review"
+                    },
+                    {
+                        time: "Multiple Hammer-ons (15 minutes)",
+                        description: "Pick once, then hammer multiple notes: open-2nd-4th-5th fret<br>Each hammer-on should be clean and audible<br>Practice on different strings"
+                    },
+                    {
+                        time: "Hammer-on/Pull-off Combinations (15 minutes)",
+                        description: "Complex patterns: pick-hammer-pull-hammer-pull<br>Creates fluid, connected phrases<br>Focus on even volume between all notes"
+                    },
+                    {
+                        time: "Legato Licks (12 minutes)",
+                        description: "Classic rock licks using primarily legato technique<br>Jimmy Page style: fast hammer-on/pull-off runs<br>Practice slowly first, then build speed"
+                    },
+                    {
+                        time: "Speed vs. Clarity (10 minutes)",
+                        description: "Slow, clean legato is better than fast, sloppy legato<br>Each note should ring clearly<br>Build speed gradually while maintaining clarity"
+                    }
+                ],
+                goals: "Advanced legato technique, speed development, clarity maintenance",
+                essential: "Legato creates vocal-like quality in lead guitar",
+                totalTime: "60 minutes"
+            },
+            35: {
+                title: "Week 35: \"Sweet Home Chicago\" - Shuffle Rhythm",
+                subtitle: "Song Application - Foundation Building",
+                practices: [
+                    {
+                        time: "Shuffle Feel Introduction (15 minutes)",
+                        description: "Shuffle vs. straight 8th notes<br>Triplet feel: 'long-short-long-short' instead of 'even-even'<br>Practice with E-A-B7 progression"
+                    },
+                    {
+                        time: "Shuffle Strumming (15 minutes)",
+                        description: "Down-up pattern with shuffle timing<br>Emphasis on beats 1 and 3, lighter on 2 and 4<br>Use 7th chords for authentic blues sound"
+                    },
+                    {
+                        time: "Walking Bass Lines (15 minutes)",
+                        description: "Simple bass note movement between chords<br>E to A: play E, F#, G, then A chord<br>Combines rhythm guitar with bass movement"
+                    },
+                    {
+                        time: "Blues Performance (15 minutes)",
+                        description: "12-bar blues with shuffle feel<br>Combine rhythm playing with simple lead fills<br>Practice call-and-response between rhythm and lead"
+                    }
+                ],
+                goals: "Shuffle rhythm mastery, walking bass concepts, authentic blues feel",
+                track: "Chicago blues shuffle backing track",
+                chords: ['E7', 'A7'],
+                totalTime: "60 minutes"
+            },
+            42: {
+                title: "Week 42: Major Scale Positions",
+                subtitle: "Intermediate Preparation - Foundation Building",
+                practices: [
+                    {
+                        time: "Position 2 Introduction (20 minutes)",
+                        description: "C major scale starting from 5th fret<br>Same notes as position 1, different fingering pattern<br>Practice connecting to position 1"
+                    },
+                    {
+                        time: "Two-Position Practice (20 minutes)",
+                        description: "Play from position 1 to position 2 and back<br>Focus on smooth transitions between positions<br>Understanding that it's one continuous scale"
+                    },
+                    {
+                        time: "Scale Sequences (15 minutes)",
+                        description: "Play scale in groups of 3: C-D-E, D-E-F, E-F-G, etc.<br>Creates musical patterns within the scale<br>Develops finger independence and melodic thinking"
+                    },
+                    {
+                        time: "Improvisation with Major Scale (5 minutes)",
+                        description: "Simple improvisation over major key backing track<br>Notice different mood compared to minor pentatonic<br>Focus on chord tones for strong melodic foundation"
+                    }
+                ],
+                goals: "Scale position connectivity, sequence playing, major key improvisation",
+                track: "Major key progression for improvisation",
+                totalTime: "60 minutes"
+            },
+            50: {
+                title: "Week 50: \"Crossroads\" - Faster Blues Playing",
+                subtitle: "Intermediate Preparation - Foundation Building",
+                practices: [
+                    {
+                        time: "Faster Tempo Blues (20 minutes)",
+                        description: "12-bar blues at increased tempo<br>Maintaining clean technique at speed<br>Economical movement and efficient fingering"
+                    },
+                    {
+                        time: "Speed Building Exercises (20 minutes)",
+                        description: "Pentatonic scale at faster tempos<br>Alternate picking accuracy at speed<br>Building stamina for longer fast passages"
+                    },
+                    {
+                        time: "Fast Blues Licks (15 minutes)",
+                        description: "Classic fast blues licks<br>Combining speed with expression<br>Maintaining musical phrasing at tempo"
+                    },
+                    {
+                        time: "Performance Stamina (5 minutes)",
+                        description: "Playing longer passages without fatigue<br>Maintaining consistency throughout song<br>Physical preparation for demanding material"
+                    }
+                ],
+                goals: "Speed development, fast blues technique, performance stamina",
+                track: "Fast blues backing track (120+ BPM)",
+                totalTime: "60 minutes"
+            },
+            54: {
+                title: "Week 54: Reggae and Ska Rhythms",
+                subtitle: "Advanced Rhythm - Intermediate Development",
+                practices: [
+                    {
+                        time: "Classic Reggae Skank (20 minutes)",
+                        description: "Emphasis on beats 2 and 4 (upbeats)<br>Sharp, staccato chord hits<br>Palm muting for percussive effect"
+                    },
+                    {
+                        time: "One Drop Rhythm (15 minutes)",
+                        description: "Emphasis on beat 3 only<br>Requires restraint and groove understanding<br>Practice with appropriate chord progressions"
+                    },
+                    {
+                        time: "Ska Upstroke Technique (20 minutes)",
+                        description: "Fast upstroke on every upbeat<br>Requires stamina and consistency<br>Practice with ska chord progressions"
+                    },
+                    {
+                        time: "Style Integration (10 minutes)",
+                        description: "Understanding when to use each style<br>Cultural and musical context awareness<br>Combining with other guitar techniques"
+                    }
+                ],
+                goals: "Reggae/ska rhythm mastery, cultural style awareness, groove development",
+                track: "Authentic reggae and ska backing tracks",
+                totalTime: "65 minutes"
+            },
+            62: {
+                title: "Week 62: Pentatonic Sequences and Patterns",
+                subtitle: "Scale Mastery - Intermediate Development",
+                practices: [
+                    {
+                        time: "Scale Sequences (25 minutes)",
+                        description: "Groups of 3: play every 3rd note of scale<br>Groups of 4: four-note patterns through scale<br>Ascending and descending sequences"
+                    },
+                    {
+                        time: "Intervallic Patterns (20 minutes)",
+                        description: "Skip patterns: play note, skip one, play next<br>Creates melodic interest beyond scalar motion<br>Practice in different positions"
+                    },
+                    {
+                        time: "Rhythmic Variations (15 minutes)",
+                        description: "Same notes, different rhythms<br>Triplets, 16th notes, syncopated patterns<br>Develops rhythmic sophistication"
+                    },
+                    {
+                        time: "Creative Application (10 minutes)",
+                        description: "Combine sequences with bending and vibrato<br>Use sequences as basis for improvisation<br>Develop personal variations"
+                    }
+                ],
+                goals: "Advanced pentatonic concepts, melodic sophistication, creative application",
+                track: "Various styles for sequence application",
+                totalTime: "70 minutes"
+            },
+            70: {
+                title: "Week 70: Harmony Bends and Advanced Expression",
+                subtitle: "Advanced Lead - Intermediate Development",
+                practices: [
+                    {
+                        time: "Harmony Bends (25 minutes)",
+                        description: "Bend one note while playing harmony note on different string<br>Creates moving harmony effect<br>Practice different interval combinations"
+                    },
+                    {
+                        time: "Bending Accuracy at Speed (20 minutes)",
+                        description: "Fast, accurate bends<br>Maintain pitch accuracy while increasing speed<br>Develop muscle memory for bend intervals"
+                    },
+                    {
+                        time: "Emotional Bending (15 minutes)",
+                        description: "Use bends to convey emotion<br>Slow, agonized bends vs. quick, aggressive bends<br>Matching bending style to musical context"
+                    },
+                    {
+                        time: "Advanced Vibrato with Bends (10 minutes)",
+                        description: "Add vibrato while bent<br>Control vibrato speed and width while bent<br>Master-level expressive technique"
+                    }
+                ],
+                goals: "Harmony techniques, emotional expression, master-level bending",
+                essential: "Advanced bending separates good players from great players",
+                totalTime: "70 minutes"
+            },
+            78: {
+                title: "Week 78: \"Sultans of Swing\" - Fingerpicking and Lead",
+                subtitle: "Song Complexity - Intermediate Development",
+                practices: [
+                    {
+                        time: "Fingerpicking Rhythm (25 minutes)",
+                        description: "Complex fingerpicking pattern<br>Combines bass line with chord elements<br>Requires independence between thumb and fingers"
+                    },
+                    {
+                        time: "Lead Integration (25 minutes)",
+                        description: "Lead lines woven into fingerpicking<br>Seamless transition between rhythm and lead<br>Advanced coordination required"
+                    },
+                    {
+                        time: "Mark Knopfler Style (20 minutes)",
+                        description: "Specific fingerpicking technique<br>Clean, articulated approach<br>Focus on clarity and precision"
+                    },
+                    {
+                        time: "Complete Performance (5 minutes)",
+                        description: "Integrate all elements<br>Practice complete song performance<br>Focus on stylistic authenticity"
+                    }
+                ],
+                goals: "Advanced fingerpicking, style mastery, complex integration",
+                essential: "This represents master-level technique integration",
+                milestone: "Master-level song performance with all techniques",
+                totalTime: "75 minutes"
+            },
+            86: {
+                title: "Week 86: Chord Substitutions and Reharmonization",
+                subtitle: "Music Theory - Intermediate Development",
+                practices: [
+                    {
+                        time: "Basic Substitutions (25 minutes)",
+                        description: "Relative minor/major substitutions<br>Tritone substitutions for dominant chords<br>Secondary dominant applications"
+                    },
+                    {
+                        time: "Reharmonization Concepts (25 minutes)",
+                        description: "Adding chords to simple progressions<br>Creating more sophisticated harmonic movement<br>Maintaining melodic integrity while changing harmony"
+                    },
+                    {
+                        time: "Jazz-influenced Substitutions (20 minutes)",
+                        description: "ii-V-I progressions<br>Circle of fifths movement<br>Advanced harmonic concepts"
+                    },
+                    {
+                        time: "Creative Applications (5 minutes)",
+                        description: "Apply substitutions to known songs<br>Create personal harmonic arrangements<br>Develop sophisticated harmonic thinking"
+                    }
+                ],
+                goals: "Advanced harmony, creative reharmonization, jazz concepts",
+                track: "Standards and jazz progressions for substitution practice",
+                totalTime: "75 minutes"
+            },
+            94: {
+                title: "Week 94: Stage Presence and Performance Techniques",
+                subtitle: "Performance & Mastery - Intermediate Development",
+                practices: [
+                    {
+                        time: "Physical Presence (20 minutes)",
+                        description: "Body language and stage movement<br>Using guitar as visual element<br>Commanding stage presence"
+                    },
+                    {
+                        time: "Musical Communication (25 minutes)",
+                        description: "Conveying emotion through performance<br>Connecting with audience through music<br>Building energy and maintaining interest"
+                    },
+                    {
+                        time: "Performance Energy Management (20 minutes)",
+                        description: "Pacing energy throughout performance<br>Building climaxes and providing rest points<br>Maintaining technical accuracy under performance pressure"
+                    },
+                    {
+                        time: "Recovery and Adaptation (10 minutes)",
+                        description: "Handling equipment problems gracefully<br>Adapting to different venue acoustics<br>Professional problem-solving during performance"
+                    }
+                ],
+                goals: "Master-level performance skills, stage presence, professional adaptability",
+                essential: "Great performers connect emotionally, not just technically",
+                totalTime: "75 minutes"
+            },
+            102: {
+                title: "Week 102: \"Stairway to Heaven\" - Dynamics and Build",
+                subtitle: "Performance & Mastery - Advanced Integration",
+                practices: [
+                    {
+                        time: "Dynamic Progression (25 minutes)",
+                        description: "Starting simple, building complexity<br>Understanding song's emotional journey<br>Managing energy throughout extended piece"
+                    },
+                    {
+                        time: "Multiple Guitar Techniques (25 minutes)",
+                        description: "Fingerpicking intro<br>Strummed rhythm sections<br>Electric lead guitar climax"
+                    },
+                    {
+                        time: "Arrangement Understanding (20 minutes)",
+                        description: "How all parts fit together<br>Supporting vocals and other instruments<br>Creating epic musical statement"
+                    },
+                    {
+                        time: "Complete Integration (10 minutes)",
+                        description: "Seamless transitions between techniques<br>Maintaining musical flow throughout<br>Delivering complete artistic statement"
+                    }
+                ],
+                goals: "Epic song mastery, technique integration, artistic expression",
+                essential: "This represents integration of two years of learning",
+                totalTime: "80 minutes"
+            },
+            103: {
+                title: "Week 103: Self-Assessment and Goal Setting",
+                subtitle: "Performance & Mastery - Artistic Development",
+                practices: [
+                    {
+                        time: "Technical Assessment (25 minutes)",
+                        description: "Review all major techniques learned<br>Identify strengths and weaknesses<br>Set specific improvement goals"
+                    },
+                    {
+                        time: "Musical Assessment (25 minutes)",
+                        description: "Evaluate musical expression and creativity<br>Review repertoire and style versatility<br>Assess improvisation and composition skills"
+                    },
+                    {
+                        time: "Performance Assessment (20 minutes)",
+                        description: "Evaluate stage presence and communication<br>Review recording and collaboration skills<br>Assess professional readiness"
+                    },
+                    {
+                        time: "Future Planning (10 minutes)",
+                        description: "Set goals for continued development<br>Identify areas for specialization<br>Plan Year 3 curriculum or advanced study"
+                    }
+                ],
+                goals: "Honest self-assessment, goal setting, future planning",
+                essential: "Continuous improvement requires honest self-evaluation",
+                totalTime: "80 minutes"
             }
-            // Additional weeks would be added here...
+            22: {
+                title: "Week 22: Extended Chords (Minor 7th, Major 7th)",
+                subtitle: "Chord Expansion - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Dominant 7th chord practice"
+                    },
+                    {
+                        time: "Minor 7th Chords (15 minutes)",
+                        description: "Am7: Am but add 4th finger 3rd fret 1st string<br>Em7: Em but add 4th finger 3rd fret 2nd string<br>Dm7: Dm but add 4th finger 3rd fret 1st string"
+                    },
+                    {
+                        time: "Major 7th Chords (15 minutes)",
+                        description: "Cmaj7: C major but add 4th finger 3rd fret 1st string<br>Fmaj7: F major but remove 4th finger (complex barre variation)<br>Focus on smooth, jazzy sound"
+                    },
+                    {
+                        time: "Chord Progression Practice (12 minutes)",
+                        description: "Jazz-influenced progression: Cmaj7-Am7-Dm7-G7<br>Play slowly, let each chord ring fully<br>Notice sophisticated harmonic movement"
+                    },
+                    {
+                        time: "Fingerpicking Introduction (5 minutes)",
+                        description: "Simple fingerpicking: thumb plays bass note, fingers play treble<br>Practice with Am7 chord"
+                    }
+                ],
+                goals: "Extended chord vocabulary, harmonic sophistication, fingerpicking prep",
+                track: "Jazz-influenced backing track for extended chords",
+                totalTime: "55 minutes"
+            },
+            25: {
+                title: "Week 25: Half-Step Bending Technique",
+                subtitle: "Lead Development - Foundation Building",
+                practices: [
+                    {
+                        time: "Warm-up (8 minutes)",
+                        description: "Pentatonic scale review with focus on clean fretting"
+                    },
+                    {
+                        time: "Bend Mechanics (15 minutes)",
+                        description: "Proper bend technique: use wrist rotation, not just finger<br>Support bending finger with other fingers behind it<br>Practice on 3rd string, 7th fret: bend up half-step (to 8th fret pitch)"
+                    },
+                    {
+                        time: "Bend Accuracy (15 minutes)",
+                        description: "Bend 7th fret 3rd string to match 8th fret 3rd string<br>Play target note first, then bend to match pitch<br>Use ears to develop pitch accuracy"
+                    },
+                    {
+                        time: "Musical Bending (12 minutes)",
+                        description: "Bend and hold: bend note and sustain for 4 beats<br>Bend and release: bend up, then release back down<br>Practice over backing track"
+                    },
+                    {
+                        time: "Bend Integration (5 minutes)",
+                        description: "Add bends to existing pentatonic licks<br>Replace some regular notes with bent notes"
+                    }
+                ],
+                goals: "Accurate half-step bends, proper bend technique, musical application",
+                track: "Slow blues for bend practice",
+                totalTime: "55-60 minutes"
+            },
+            33: {
+                title: "Week 33: \"Smoke on the Water\" - Complete Study",
+                subtitle: "Song Application - Foundation Building",
+                practices: [
+                    {
+                        time: "Main Riff Mastery (15 minutes)",
+                        description: "Famous riff: 0-3-5, 0-3-6-5, 0-3-5, 3-0 (4th string)<br>Play with authority and proper timing<br>Use downstrokes for heavier sound"
+                    },
+                    {
+                        time: "Power Chord Backing (15 minutes)",
+                        description: "Rhythm guitar part using G5-Bb5-C5 power chords<br>Learn both lead riff and rhythm parts<br>Practice switching between lead and rhythm roles"
+                    },
+                    {
+                        time: "Solo Section (20 minutes)",
+                        description: "Simple solo using G minor pentatonic<br>Focus on bending and vibrato in the solo<br>Build solo intensity gradually"
+                    },
+                    {
+                        time: "Complete Song (10 minutes)",
+                        description: "Play entire song: intro riff, verse chords, solo, outro<br>Practice with backing track<br>Focus on smooth transitions between sections"
+                    }
+                ],
+                goals: "Complete song mastery, lead/rhythm integration, classic rock style",
+                track: "\"Smoke on the Water\" backing track",
+                totalTime: "60 minutes"
+            },
+            41: {
+                title: "Week 41: Major Scale Introduction",
+                subtitle: "Intermediate Preparation - Foundation Building",
+                practices: [
+                    {
+                        time: "Major Scale Theory (10 minutes)",
+                        description: "C major scale: no sharps or flats (C-D-E-F-G-A-B-C)<br>Whole step - whole step - half step - whole - whole - whole - half pattern<br>Foundation for understanding all other scales and chords"
+                    },
+                    {
+                        time: "C Major Scale Position 1 (20 minutes)",
+                        description: "Open position C major scale<br>Starting on 3rd fret 5th string (C note)<br>Practice ascending and descending slowly<br>Focus on clean fretting and proper fingering"
+                    },
+                    {
+                        time: "Scale Practice Routine (20 minutes)",
+                        description: "Play scale with metronome at 60 BPM<br>Practice with different rhythms: quarter notes, 8th notes<br>Use alternate picking throughout"
+                    },
+                    {
+                        time: "Musical Application (10 minutes)",
+                        description: "Play scale over C major backing track<br>Notice brighter, happier sound compared to minor scales<br>Experiment with different note choices"
+                    }
+                ],
+                goals: "Major scale foundation, music theory understanding, bright tonality",
+                track: "C major backing track for scale practice",
+                totalTime: "60 minutes"
+            },
+            53: {
+                title: "Week 53: Complex Strumming Patterns",
+                subtitle: "Advanced Rhythm - Intermediate Development",
+                practices: [
+                    {
+                        time: "16th Note Mastery (20 minutes)",
+                        description: "Complex 16th note patterns: D-u-d-U-d-u-D-u (capitals = emphasis)<br>Count: '1-e-and-a-2-e-and-a-3-e-and-a-4-e-and-a'<br>Practice with metronome, start slow (60 BPM)"
+                    },
+                    {
+                        time: "Syncopated Rhythms (20 minutes)",
+                        description: "Off-beat emphasis patterns<br>Reggae-influenced upbeat strumming<br>Jazz-influenced syncopation"
+                    },
+                    {
+                        time: "Dynamic Strumming (15 minutes)",
+                        description: "Varying attack intensity within patterns<br>Building and releasing tension through dynamics<br>Accenting specific beats for groove"
+                    },
+                    {
+                        time: "Pattern Application (10 minutes)",
+                        description: "Apply complex patterns to song progressions<br>Match strumming pattern to song style<br>Practice pattern changes within songs"
+                    }
+                ],
+                goals: "Advanced rhythmic complexity, syncopation mastery, dynamic control",
+                track: "Complex rhythm backing tracks with click",
+                totalTime: "65 minutes"
+            },
+            61: {
+                title: "Week 61: Complete Pentatonic System",
+                subtitle: "Scale Mastery - Intermediate Development",
+                practices: [
+                    {
+                        time: "Five Pentatonic Positions (30 minutes)",
+                        description: "Review all five positions of minor pentatonic<br>Practice each position separately for clarity<br>6 minutes per position, focus on clean execution"
+                    },
+                    {
+                        time: "Position Connections (25 minutes)",
+                        description: "Smooth transitions between all positions<br>Practice ascending through all positions<br>Practice descending through all positions"
+                    },
+                    {
+                        time: "Musical Application (15 minutes)",
+                        description: "Use entire fretboard for improvisation<br>Choose positions based on musical needs<br>Develop melodic thinking across positions"
+                    }
+                ],
+                goals: "Complete pentatonic mastery, fretboard coverage, musical application",
+                track: "Extended backing tracks for long-form improvisation",
+                totalTime: "70 minutes"
+            },
+            69: {
+                title: "Week 69: Advanced Bending Techniques",
+                subtitle: "Advanced Lead - Intermediate Development",
+                practices: [
+                    {
+                        time: "1.5 Step Bends (20 minutes)",
+                        description: "Bend 7th fret 3rd string up 1.5 steps (to 10th fret pitch)<br>Requires significant finger strength<br>Support with multiple fingers"
+                    },
+                    {
+                        time: "Pre-bends (15 minutes)",
+                        description: "Bend string before picking<br>Pick while bent, then release<br>Creates unique attack and release effects"
+                    },
+                    {
+                        time: "Unison Bends (20 minutes)",
+                        description: "Bend lower string to match higher unbent string<br>Classic technique: bend 7th fret 3rd string to match 7th fret 2nd string<br>Creates thick, doubled sound"
+                    },
+                    {
+                        time: "Compound Bends (15 minutes)",
+                        description: "Multiple bends in sequence<br>Bend and release combinations<br>Advanced expressive techniques"
+                    }
+                ],
+                goals: "Advanced bending mastery, expressive technique development, unique sounds",
+                track: "Slow blues for expressive bending practice",
+                totalTime: "70 minutes"
+            },
+            77: {
+                title: "Week 77: \"Layla\" - Rhythm and Lead Integration",
+                subtitle: "Song Complexity - Intermediate Development",
+                practices: [
+                    {
+                        time: "Main Riff Analysis (20 minutes)",
+                        description: "Complex riff combining single notes and chords<br>Precise timing and articulation required<br>Practice slowly, build to tempo gradually"
+                    },
+                    {
+                        time: "Rhythm Guitar Parts (25 minutes)",
+                        description: "Multiple rhythm guitar layers<br>Understanding arrangement complexity<br>Practice different rhythm parts separately"
+                    },
+                    {
+                        time: "Lead Guitar Sections (25 minutes)",
+                        description: "Melodic lead lines over rhythm<br>Integration of rhythm and lead playing<br>Solo section analysis and practice"
+                    },
+                    {
+                        time: "Complete Song Integration (5 minutes)",
+                        description: "Put all parts together<br>Practice transitions between sections<br>Focus on musical flow and continuity"
+                    }
+                ],
+                goals: "Complex song mastery, arrangement understanding, part integration",
+                track: "\"Layla\" backing track with multiple sections",
+                totalTime: "75 minutes"
+            },
+            85: {
+                title: "Week 85: Chord Construction and Intervals",
+                subtitle: "Music Theory - Intermediate Development",
+                practices: [
+                    {
+                        time: "Interval Recognition (20 minutes)",
+                        description: "Major 3rd, minor 3rd, perfect 5th, etc.<br>Practice identifying intervals by ear<br>Understanding interval quality and quantity"
+                    },
+                    {
+                        time: "Chord Building from Intervals (25 minutes)",
+                        description: "Major chord = root + major 3rd + perfect 5th<br>Minor chord = root + minor 3rd + perfect 5th<br>Build chords from interval knowledge"
+                    },
+                    {
+                        time: "Extended Chord Construction (20 minutes)",
+                        description: "Add 7ths, 9ths, 11ths to basic triads<br>Understand chord symbol notation<br>Practice building complex chords"
+                    },
+                    {
+                        time: "Application to Guitar (10 minutes)",
+                        description: "Find chord tones on guitar neck<br>Create chord voicings using theory knowledge<br>Connect theory to practical playing"
+                    }
+                ],
+                goals: "Music theory foundation, chord understanding, theoretical application",
+                essential: "Theory enhances creativity rather than limiting it",
+                totalTime: "75 minutes"
+            },
+            93: {
+                title: "Week 93: Stage Preparation and Setlist Creation",
+                subtitle: "Performance & Mastery - Intermediate Development",
+                practices: [
+                    {
+                        time: "Setlist Construction (20 minutes)",
+                        description: "Song order for maximum impact<br>Balancing energy levels throughout performance<br>Transitions between songs"
+                    },
+                    {
+                        time: "Performance Preparation (25 minutes)",
+                        description: "Practicing songs in performance order<br>Building stamina for full set performance<br>Handling mistakes gracefully in performance context"
+                    },
+                    {
+                        time: "Stage Equipment Setup (15 minutes)",
+                        description: "Understanding amplifier settings for venue<br>Pedal setup and signal chain<br>Quick setup and breakdown procedures"
+                    },
+                    {
+                        time: "Audience Interaction (15 minutes)",
+                        description: "Engaging audience between songs<br>Reading audience energy and responding<br>Professional stage presence development"
+                    }
+                ],
+                goals: "Professional performance preparation, stage skills, audience engagement",
+                track: "Live performance backing tracks with audience noise",
+                totalTime: "75 minutes"
+            },
+            101: {
+                title: "Week 101: \"Comfortably Numb\" - Complete Arrangement",
+                subtitle: "Performance & Mastery - Advanced Integration",
+                practices: [
+                    {
+                        time: "Complete Song Analysis (20 minutes)",
+                        description: "Understanding full song structure<br>Different guitar parts throughout song<br>Dynamic build and emotional arc"
+                    },
+                    {
+                        time: "Rhythm Guitar Mastery (25 minutes)",
+                        description: "Clean rhythm parts<br>Building intensity through rhythm<br>Supporting vocal melody effectively"
+                    },
+                    {
+                        time: "Lead Guitar Integration (25 minutes)",
+                        description: "Multiple lead guitar sections<br>Building from simple to complex<br>Emotional expression through lead guitar"
+                    },
+                    {
+                        time: "Complete Performance (10 minutes)",
+                        description: "Full song performance with all parts<br>Managing energy and dynamics<br>Creating emotional impact through performance"
+                    }
+                ],
+                goals: "Complete song mastery, dynamic control, emotional performance",
+                track: "\"Comfortably Numb\" backing tracks with different sections",
+                essential: "This represents integration of two years of learning",
+                totalTime: "80 minutes"
+            },
+            // Continue with additional weeks...
+            52: {
+                title: "Week 52: Performance Preparation",
+                subtitle: "Intermediate Preparation - Year 1 Completion",
+                practices: [
+                    {
+                        time: "Song Repertoire (20 minutes)",
+                        description: "Review all songs learned throughout year<br>Practice smooth transitions between songs<br>Create potential setlist"
+                    },
+                    {
+                        time: "Performance Skills (15 minutes)",
+                        description: "Playing with confidence<br>Recovery from mistakes<br>Stage presence basics"
+                    },
+                    {
+                        time: "Technical Consistency (15 minutes)",
+                        description: "Performing techniques under pressure<br>Maintaining quality when nervous<br>Building muscle memory for reliable performance"
+                    },
+                    {
+                        time: "Year 1 Celebration (10 minutes)",
+                        description: "Acknowledge progress made<br>Record a performance of favorite song<br>Plan continued learning journey"
+                    }
+                ],
+                goals: "Performance readiness, confidence building, progress celebration",
+                milestone: "Record and share a complete song performance",
+                totalTime: "60 minutes"
+            },
+            104: {
+                title: "Week 104: Finding Your Voice and Moving Forward",
+                subtitle: "Performance & Mastery - Artistic Development",
+                practices: [
+                    {
+                        time: "Personal Style Development (25 minutes)",
+                        description: "Identifying your unique musical voice<br>Combining influences into personal style<br>Developing signature techniques and approaches"
+                    },
+                    {
+                        time: "Creative Expression (25 minutes)",
+                        description: "Original composition and improvisation<br>Personal interpretation of existing material<br>Developing artistic vision"
+                    },
+                    {
+                        time: "Career Path Consideration (15 minutes)",
+                        description: "Professional performance opportunities<br>Teaching and sharing knowledge<br>Continued learning and development paths"
+                    },
+                    {
+                        time: "Celebration and Reflection (15 minutes)",
+                        description: "Acknowledge two years of dedicated learning<br>Record final performance showcasing growth<br>Plan celebration of achievement"
+                    }
+                ],
+                goals: "Personal voice development, artistic vision, continued growth planning",
+                milestone: "Complete artistic statement showcasing two years of growth",
+                totalTime: "75-90 minutes"
+            }
         };
+
+        // Fill in missing weeks with basic content
+        for (let i = 23; i <= 103; i++) {
+            if (!weekData[i]) {
+                weekData[i] = {
+                    title: `Week ${i}: Advanced Curriculum Content`,
+                    subtitle: getWeekSubtitle(i),
+                    practices: [
+                        {
+                            time: "Detailed practice routine coming soon",
+                            description: "This week's specific practice routine is being developed. Please refer to the full curriculum document for complete instructions."
+                        }
+                    ],
+                    goals: "Refer to full curriculum for detailed goals",
+                    totalTime: getWeekTime(i)
+                };
+            }
+        }
+
+        function getWeekSubtitle(weekNumber) {
+            if (weekNumber <= 8) return "Foundation Building - Getting Started";
+            if (weekNumber <= 16) return "Scale Introduction - Foundation Building";
+            if (weekNumber <= 24) return "Chord Expansion - Foundation Building";
+            if (weekNumber <= 32) return "Lead Development - Foundation Building";
+            if (weekNumber <= 40) return "Song Application - Foundation Building";
+            if (weekNumber <= 52) return "Intermediate Preparation - Foundation Building";
+            if (weekNumber <= 60) return "Advanced Rhythm - Intermediate Development";
+            if (weekNumber <= 68) return "Scale Mastery - Intermediate Development";
+            if (weekNumber <= 76) return "Advanced Lead - Intermediate Development";
+            if (weekNumber <= 84) return "Song Complexity - Intermediate Development";
+            if (weekNumber <= 92) return "Music Theory - Intermediate Development";
+            return "Performance & Mastery - Intermediate Development";
+        }
+
+        function getWeekTime(weekNumber) {
+            if (weekNumber <= 13) return "20-30 minutes";
+            if (weekNumber <= 26) return "30-45 minutes";
+            if (weekNumber <= 39) return "45-60 minutes";
+            if (weekNumber <= 52) return "60+ minutes";
+            if (weekNumber <= 65) return "60-70 minutes";
+            if (weekNumber <= 78) return "70-75 minutes";
+            if (weekNumber <= 91) return "75-80 minutes";
+            return "75-90 minutes";
+        }
 
         function updateProgress() {
             const progressPercent = Math.round((completedWeeks.length / 104) * 100);
@@ -830,6 +2641,7 @@
             document.getElementById('completedWeeks').textContent = completedWeeks.length;
             document.getElementById('currentWeek').textContent = currentWeek;
             document.getElementById('progressPercent').textContent = progressPercent + '%';
+            document.getElementById('weekProgressText').textContent = currentWeek;
 
             // Update week item classes
             for (let i = 1; i <= 104; i++) {
@@ -893,26 +2705,84 @@
             weekElement.id = `week${weekNumber}`;
             weekElement.className = 'week-content';
             
+            // Get relevant scales and techniques for this week
+            const weekScales = getWeekScales(weekNumber);
+            const weekTechniques = getWeekTechniques(weekNumber);
+            
             weekElement.innerHTML = `
                 <div class="week-header">
                     <div class="week-title">${data.title}</div>
                     <div class="week-subtitle">${data.subtitle}</div>
                 </div>
 
+                ${createTimerSettings()}
+
+                ${data.chords ? `
+                    <div class="practice-section">
+                        <h4>🎼 Chord Diagrams</h4>
+                        ${data.chords.map(chord => `
+                            <div class="chord-diagram">
+                                <h5>${chord}</h5>
+                                <pre>${chordDiagrams[chord] || 'Diagram coming soon...'}</pre>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                ${weekScales.length > 0 ? `
+                    <div class="practice-section">
+                        <h4>🎵 Scale Patterns</h4>
+                        ${weekScales.map(scale => `
+                            <div class="chord-diagram">
+                                <h5>${scale}</h5>
+                                <pre>${scaleDiagrams[scale] || 'Scale diagram coming soon...'}</pre>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                ${weekTechniques.length > 0 ? `
+                    <div class="technique-highlight">
+                        <h4>💡 Technique Focus</h4>
+                        ${weekTechniques.map(technique => `
+                            <div style="margin-bottom: 1rem;">
+                                <pre style="color: white; margin: 0;">${techniqueTips[technique] || ''}</pre>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
                 <div class="practice-section">
                     <h4>🎯 Daily Practice Routine (${data.totalTime})</h4>
-                    ${data.practices.map(practice => `
-                        <div class="practice-item">
-                            <div class="practice-time">${practice.time}</div>
-                            <p>${practice.description}</p>
-                        </div>
-                    `).join('')}
+                    ${data.practices.map((practice, index) => {
+                        const duration = extractDuration(practice.time);
+                        return `
+                            <div class="practice-item">
+                                <div class="practice-time">${practice.time}</div>
+                                <p>${practice.description}</p>
+                                ${duration > 0 ? createPracticeTimer(`${weekNumber}-${index}`, duration, practice.time.split('(')[0].trim()) : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                    
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #e8f5e8; border-radius: 6px; border: 1px solid #c3e6c3;">
+                        <h5 style="color: #27ae60; margin-bottom: 0.5rem;">🎯 Full Session Timer</h5>
+                        <p style="margin-bottom: 1rem;">Practice the entire ${data.totalTime} session:</p>
+                        ${createPracticeTimer(`${weekNumber}-full`, getTotalMinutes(data.totalTime), `Complete ${data.totalTime} Session`)}
+                    </div>
                 </div>
 
                 <div class="goals-section">
                     <h5>🎯 Goals for This Week</h5>
                     <p>${data.goals}</p>
                 </div>
+
+                ${data.essential ? `
+                    <div class="goals-section" style="background: #fff3cd; border-color: #ffeaa7;">
+                        <h5 style="color: #856404;">💡 Essential Point</h5>
+                        <p>${data.essential}</p>
+                    </div>
+                ` : ''}
 
                 ${data.issues ? `
                     <div class="track-info">
@@ -928,7 +2798,23 @@
                     </div>
                 ` : ''}
 
-                <button class="complete-week-btn" onclick="completeWeek(${weekNumber})">✅ Complete Week ${weekNumber}</button>
+                ${data.milestone ? `
+                    <div class="milestone-highlight">
+                        <h5>🏆 Milestone Achievement</h5>
+                        <p>${data.milestone}</p>
+                    </div>
+                ` : ''}
+
+                ${getWeekTips(weekNumber) ? `
+                    <div class="practice-section" style="background: #e8f5e8; border-color: #c3e6c3;">
+                        <h4>💭 Weekly Practice Tips</h4>
+                        <p>${getWeekTips(weekNumber)}</p>
+                    </div>
+                ` : ''}
+
+                <button class="complete-week-btn" onclick="completeWeek(${weekNumber})">
+                    ${completedWeeks.includes(weekNumber) ? '✅ Week Completed!' : `✅ Complete Week ${weekNumber}`}
+                </button>
 
                 <div class="week-navigation">
                     <button class="nav-btn" ${weekNumber === 1 ? 'disabled' : `onclick="showWeek(${weekNumber - 1})"`}>← Previous Week</button>
@@ -938,6 +2824,53 @@
 
             document.querySelector('.content-area').appendChild(weekElement);
             return weekElement;
+        }
+
+        // Helper function to extract duration from practice time string
+        function extractDuration(timeString) {
+            const match = timeString.match(/\((\d+)\s*min/i);
+            return match ? parseInt(match[1]) : 0;
+        }
+
+        // Helper function to get total minutes from time string
+        function getTotalMinutes(timeString) {
+            // Extract number from strings like "20-25 minutes" or "55 minutes"
+            const match = timeString.match(/(\d+)(?:-\d+)?\s*min/i);
+            return match ? parseInt(match[1]) : 30; // Default to 30 if no match
+        }
+
+        // Helper functions to determine scales and techniques for each week
+        function getWeekScales(weekNumber) {
+            const scales = [];
+            if (weekNumber === 9 || weekNumber === 10) scales.push('A minor pentatonic');
+            if (weekNumber === 13 || weekNumber === 14) scales.push('E minor pentatonic');
+            if (weekNumber === 41 || weekNumber === 42) scales.push('C major scale');
+            return scales;
+        }
+
+        function getWeekTechniques(weekNumber) {
+            const techniques = [];
+            if (weekNumber >= 25 && weekNumber <= 28) techniques.push('bending');
+            if (weekNumber === 27 || weekNumber === 28) techniques.push('vibrato');
+            if (weekNumber === 11 || weekNumber === 71) techniques.push('alternate picking');
+            if (weekNumber >= 17 && weekNumber <= 20) techniques.push('barre chords');
+            return techniques;
+        }
+
+        function getWeekTips(weekNumber) {
+            const tips = {
+                1: "Start with short practice sessions. Quality over quantity - 15 minutes of focused practice beats an hour of distracted noodling.",
+                5: "Playing in time is the most important skill. Everything else can be sloppy, but if you're in time, it will sound musical.",
+                13: "This is your first milestone! You now know two pentatonic positions. This opens up a huge range of the fretboard.",
+                25: "Bending is what gives guitar its voice. Take your time developing this technique - it separates guitar from other instruments.",
+                26: "This week marks the halfway point of Year 1! You've built a solid foundation and are ready for more advanced techniques.",
+                39: "You can now combine rhythm and lead playing! This is a major milestone - most guitarists struggle with this integration.",
+                52: "Congratulations on completing Year 1! You've transformed from beginner to solid intermediate player.",
+                61: "You now have access to the entire fretboard with pentatonic scales. This is where real improvisation begins.",
+                78: "This song represents master-level integration. If you can play this well, you're approaching advanced status.",
+                104: "You've completed two years of dedicated study! You're now an advanced intermediate player with a solid foundation for continued growth."
+            };
+            return tips[weekNumber] || null;
         }
 
         function createBasicWeekElement(weekNumber) {
@@ -1005,8 +2938,60 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            // Set start date if not already set
+            if (!localStorage.getItem('startDate')) {
+                localStorage.setItem('startDate', new Date().toISOString());
+            }
+            
             updateProgress();
             showOverview();
+            setupSearchAndFilter();
+            
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) return; // Ignore ctrl/cmd combinations
+                if (e.target.tagName === 'INPUT') return; // Ignore when typing in inputs
+                
+                switch(e.key) {
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        if (currentWeek > 1) showWeek(currentWeek - 1);
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        if (currentWeek < 104) showWeek(currentWeek + 1);
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        completeWeek(currentWeek);
+                        break;
+                    case 'h':
+                    case 'H':
+                        e.preventDefault();
+                        showOverview();
+                        break;
+                    case 'g':
+                    case 'G':
+                        e.preventDefault();
+                        goToCurrentWeek();
+                        break;
+                    case 's':
+                    case 'S':
+                        e.preventDefault();
+                        showProgressStats();
+                        break;
+                    case 'p':
+                    case 'P':
+                        e.preventDefault();
+                        showPracticeLog();
+                        break;
+                    case 't':
+                    case 'T':
+                        e.preventDefault();
+                        startQuickTimer(25); // Default Pomodoro timer
+                        break;
+                }
+            });
         });
 
         // Handle window resize
@@ -1015,6 +3000,638 @@
                 document.getElementById('sidebar').classList.remove('mobile-open');
             }
         });
+
+        // Search and filter functionality
+        let searchTerm = '';
+        let phaseFilter = '';
+
+        function setupSearchAndFilter() {
+            const searchInput = document.getElementById('searchInput');
+            const phaseFilterSelect = document.getElementById('phaseFilter');
+            
+            searchInput.addEventListener('input', function(e) {
+                searchTerm = e.target.value.toLowerCase();
+                filterWeeks();
+            });
+            
+            phaseFilterSelect.addEventListener('change', function(e) {
+                phaseFilter = e.target.value;
+                filterWeeks();
+            });
+        }
+
+        function filterWeeks() {
+            document.querySelectorAll('.week-item').forEach(item => {
+                const weekText = item.textContent.toLowerCase();
+                const weekNumber = parseInt(item.getAttribute('onclick').match(/\d+/)[0]);
+                
+                const matchesSearch = !searchTerm || weekText.includes(searchTerm);
+                const matchesPhase = !phaseFilter || isInPhaseRange(weekNumber, phaseFilter);
+                
+                item.style.display = (matchesSearch && matchesPhase) ? 'block' : 'none';
+            });
+        }
+
+        function isInPhaseRange(weekNumber, range) {
+            if (!range) return true;
+            const [start, end] = range.split('-').map(Number);
+            return weekNumber >= start && weekNumber <= end;
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('phaseFilter').value = '';
+            searchTerm = '';
+            phaseFilter = '';
+            filterWeeks();
+        }
+
+        // Enhanced timer functionality
+        let activeTimers = {};
+        let sessionStartTime = null;
+        let totalSessionTime = 0;
+        let breakTime = false;
+
+        class PracticeTimer {
+            constructor(id, duration, callback) {
+                this.id = id;
+                this.duration = duration * 60; // Convert to seconds
+                this.remaining = this.duration;
+                this.isRunning = false;
+                this.isPaused = false;
+                this.callback = callback;
+                this.interval = null;
+            }
+
+            start() {
+                if (this.isPaused) {
+                    this.isPaused = false;
+                } else {
+                    this.remaining = this.duration;
+                }
+                
+                this.isRunning = true;
+                this.interval = setInterval(() => {
+                    this.remaining--;
+                    this.updateDisplay();
+                    
+                    if (this.remaining <= 0) {
+                        this.complete();
+                    }
+                }, 1000);
+                
+                this.updateControls();
+            }
+
+            pause() {
+                this.isRunning = false;
+                this.isPaused = true;
+                clearInterval(this.interval);
+                this.updateControls();
+            }
+
+            stop() {
+                this.isRunning = false;
+                this.isPaused = false;
+                this.remaining = this.duration;
+                clearInterval(this.interval);
+                this.updateDisplay();
+                this.updateControls();
+            }
+
+            complete() {
+                this.isRunning = false;
+                this.isPaused = false;
+                clearInterval(this.interval);
+                this.remaining = 0;
+                this.updateDisplay();
+                this.updateControls();
+                
+                // Play notification sound
+                playNotificationSound();
+                
+                // Show notification
+                this.showNotification();
+                
+                if (this.callback) {
+                    this.callback();
+                }
+            }
+
+            updateDisplay() {
+                const minutes = Math.floor(this.remaining / 60);
+                const seconds = this.remaining % 60;
+                const display = document.getElementById(`timer-display-${this.id}`);
+                const ring = document.getElementById(`timer-ring-${this.id}`);
+                
+                if (display) {
+                    display.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+                
+                if (ring) {
+                    const progress = ((this.duration - this.remaining) / this.duration) * 188.5;
+                    ring.style.strokeDashoffset = 188.5 - progress;
+                }
+            }
+
+            updateControls() {
+                const startBtn = document.getElementById(`timer-start-${this.id}`);
+                const pauseBtn = document.getElementById(`timer-pause-${this.id}`);
+                const stopBtn = document.getElementById(`timer-stop-${this.id}`);
+                
+                if (startBtn) startBtn.disabled = this.isRunning;
+                if (pauseBtn) pauseBtn.disabled = !this.isRunning;
+                if (stopBtn) stopBtn.disabled = !this.isRunning && !this.isPaused;
+            }
+
+            showNotification() {
+                const notification = document.createElement('div');
+                notification.className = 'timer-notification';
+                notification.innerHTML = `
+                    <h3>⏰ Time's Up!</h3>
+                    <p>Practice section completed!</p>
+                    <button onclick="this.parentElement.remove()" class="timer-btn" style="margin-top: 1rem;">Continue</button>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        function createPracticeTimer(practiceIndex, duration, title) {
+            const timerId = `practice-${practiceIndex}`;
+            const timer = new PracticeTimer(timerId, duration, () => {
+                // Optional: Auto-start next section or suggest break
+                suggestBreakOrNext(practiceIndex);
+            });
+            
+            activeTimers[timerId] = timer;
+            
+            return `
+                <div class="practice-timer">
+                    <h5>${title} (${duration} min)</h5>
+                    <div class="progress-ring">
+                        <svg class="progress-ring" width="60" height="60">
+                            <circle class="progress-ring-circle" cx="30" cy="30" r="30"></circle>
+                            <circle class="progress-ring-progress" id="timer-ring-${timerId}" cx="30" cy="30" r="30"></circle>
+                        </svg>
+                    </div>
+                    <div class="timer-display" id="timer-display-${timerId}">${duration}:00</div>
+                    <div class="timer-controls">
+                        <button class="timer-btn" id="timer-start-${timerId}" onclick="startTimer('${timerId}')">▶️ Start</button>
+                        <button class="timer-btn" id="timer-pause-${timerId}" onclick="pauseTimer('${timerId}')" disabled>⏸️ Pause</button>
+                        <button class="timer-btn" id="timer-stop-${timerId}" onclick="stopTimer('${timerId}')" disabled>⏹️ Stop</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function startTimer(timerId) {
+            if (activeTimers[timerId]) {
+                activeTimers[timerId].start();
+                
+                // Start session timer if this is the first timer
+                if (!sessionStartTime) {
+                    startSessionTimer();
+                }
+            }
+        }
+
+        function pauseTimer(timerId) {
+            if (activeTimers[timerId]) {
+                activeTimers[timerId].pause();
+            }
+        }
+
+        function stopTimer(timerId) {
+            if (activeTimers[timerId]) {
+                activeTimers[timerId].stop();
+            }
+        }
+
+        function startSessionTimer() {
+            sessionStartTime = Date.now();
+            totalSessionTime = 0;
+            
+            // Create session timer display
+            if (!document.getElementById('sessionTimer')) {
+                const sessionTimer = document.createElement('div');
+                sessionTimer.id = 'sessionTimer';
+                sessionTimer.className = 'session-timer';
+                sessionTimer.innerHTML = `
+                    <h4>📅 Practice Session</h4>
+                    <div class="timer-display" id="sessionDisplay">0:00</div>
+                    <div style="font-size: 0.8rem; opacity: 0.9;">Total practice time</div>
+                    <button class="timer-btn" onclick="endSession()" style="margin-top: 0.5rem;">End Session</button>
+                `;
+                document.body.appendChild(sessionTimer);
+            }
+            
+            // Update session timer every second
+            const sessionInterval = setInterval(() => {
+                if (!sessionStartTime) {
+                    clearInterval(sessionInterval);
+                    return;
+                }
+                
+                const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                
+                const display = document.getElementById('sessionDisplay');
+                if (display) {
+                    display.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function endSession() {
+            const elapsed = sessionStartTime ? Math.floor((Date.now() - sessionStartTime) / 1000) : 0;
+            const minutes = Math.floor(elapsed / 60);
+            
+            // Stop all active timers
+            Object.values(activeTimers).forEach(timer => timer.stop());
+            
+            // Remove session timer
+            const sessionTimer = document.getElementById('sessionTimer');
+            if (sessionTimer) {
+                sessionTimer.remove();
+            }
+            
+            sessionStartTime = null;
+            
+            // Show session summary
+            if (elapsed > 60) { // Only show if practiced for more than a minute
+                showSessionSummary(minutes, elapsed % 60);
+            }
+        }
+
+        function showSessionSummary(minutes, seconds) {
+            const notification = document.createElement('div');
+            notification.className = 'timer-notification';
+            notification.innerHTML = `
+                <h3>🎸 Practice Session Complete!</h3>
+                <p>Total practice time: <strong>${minutes}:${seconds.toString().padStart(2, '0')}</strong></p>
+                <p>Great work! Consistency is key to improvement.</p>
+                <button onclick="this.parentElement.remove()" class="timer-btn" style="margin-top: 1rem;">Awesome!</button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Save practice session to local storage
+            savePracticeSession(minutes * 60 + seconds);
+        }
+
+        function savePracticeSession(totalSeconds) {
+            const today = new Date().toDateString();
+            const sessions = JSON.parse(localStorage.getItem('practiceSessions') || '{}');
+            
+            if (!sessions[today]) {
+                sessions[today] = 0;
+            }
+            
+            sessions[today] += totalSeconds;
+            localStorage.setItem('practiceSessions', JSON.stringify(sessions));
+        }
+
+        function suggestBreakOrNext(practiceIndex) {
+            // Suggest a break after 20+ minutes of practice
+            const totalPracticeTime = Object.values(activeTimers)
+                .filter(timer => !timer.isRunning && timer.remaining === 0)
+                .reduce((total, timer) => total + timer.duration, 0);
+            
+            if (totalPracticeTime >= 1200) { // 20 minutes
+                suggestBreak();
+            }
+        }
+
+        function suggestBreak() {
+            const notification = document.createElement('div');
+            notification.className = 'timer-notification break-timer';
+            notification.innerHTML = `
+                <h3>☕ Break Time!</h3>
+                <p>You've been practicing for a while. Take a 5-minute break?</p>
+                <div style="margin-top: 1rem;">
+                    <button onclick="startBreakTimer(5); this.parentElement.parentElement.remove()" class="timer-btn">5 min break</button>
+                    <button onclick="this.parentElement.parentElement.remove()" class="timer-btn">Continue practicing</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+        }
+
+        function startBreakTimer(minutes) {
+            const breakTimer = new PracticeTimer('break', minutes, () => {
+                const notification = document.createElement('div');
+                notification.className = 'timer-notification';
+                notification.innerHTML = `
+                    <h3>🎸 Break's Over!</h3>
+                    <p>Ready to continue practicing?</p>
+                    <button onclick="this.parentElement.remove()" class="timer-btn" style="margin-top: 1rem;">Let's go!</button>
+                `;
+                document.body.appendChild(notification);
+            });
+            
+            // Create break timer display
+            const breakDisplay = document.createElement('div');
+            breakDisplay.id = 'breakTimer';
+            breakDisplay.className = 'session-timer break-timer';
+            breakDisplay.innerHTML = `
+                <h4>☕ Break Time</h4>
+                <div class="timer-display" id="timer-display-break">${minutes}:00</div>
+                <div style="font-size: 0.8rem; opacity: 0.9;">Rest and recharge</div>
+                <button class="timer-btn" onclick="stopTimer('break'); document.getElementById('breakTimer').remove();" style="margin-top: 0.5rem;">Skip Break</button>
+            `;
+            
+            document.body.appendChild(breakDisplay);
+            
+            activeTimers['break'] = breakTimer;
+            breakTimer.start();
+        }
+
+        function getTimerPresets() {
+            return {
+                '5': '5 min',
+                '10': '10 min',
+                '15': '15 min',
+                '20': '20 min',
+                '25': '25 min (Pomodoro)',
+                '30': '30 min'
+            };
+        }
+
+        function createTimerSettings() {
+            const presets = getTimerPresets();
+            return `
+                <div class="timer-settings">
+                    <h5>⏲️ Quick Timer</h5>
+                    <p>Start a practice timer for any duration:</p>
+                    <div class="timer-presets">
+                        ${Object.entries(presets).map(([duration, label]) => 
+                            `<button class="preset-btn" onclick="startQuickTimer(${duration})">${label}</button>`
+                        ).join('')}
+                    </div>
+                    <div style="margin-top: 0.5rem;">
+                        <input type="number" id="customTimer" placeholder="Custom minutes" min="1" max="120" style="width: 120px; padding: 0.3rem; margin-right: 0.5rem;">
+                        <button class="timer-btn" onclick="startCustomTimer()" style="background: #3498db; color: white; border: none;">Start Custom</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function startQuickTimer(minutes) {
+            const timerId = `quick-${Date.now()}`;
+            const timer = new PracticeTimer(timerId, minutes, () => {
+                // Quick timer completion
+            });
+            
+            activeTimers[timerId] = timer;
+            timer.start();
+            
+            // Start session timer if needed
+            if (!sessionStartTime) {
+                startSessionTimer();
+            }
+        }
+
+        function startCustomTimer() {
+            const input = document.getElementById('customTimer');
+            const minutes = parseInt(input.value);
+            
+            if (minutes && minutes > 0 && minutes <= 120) {
+                startQuickTimer(minutes);
+                input.value = '';
+            } else {
+                alert('Please enter a valid duration (1-120 minutes)');
+            }
+        }
+
+        // Enhanced notification sound
+        function playNotificationSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create a more pleasant notification sound
+                const oscillator1 = audioContext.createOscillator();
+                const oscillator2 = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator1.connect(gainNode);
+                oscillator2.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Create a pleasant chord
+                oscillator1.frequency.value = 523.25; // C5
+                oscillator2.frequency.value = 659.25; // E5
+                
+                oscillator1.type = 'sine';
+                oscillator2.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+                
+                oscillator1.start(audioContext.currentTime);
+                oscillator2.start(audioContext.currentTime);
+                oscillator1.stop(audioContext.currentTime + 1);
+                oscillator2.stop(audioContext.currentTime + 1);
+            } catch (error) {
+                // Fallback: try to play system beep or just ignore
+                console.log('Audio notification not available');
+            }
+        }
+
+        // Enhanced week tracking
+        function getWeekStats() {
+            const now = new Date();
+            const startDate = new Date(localStorage.getItem('startDate') || now.toISOString());
+            const daysSinceStart = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+            const expectedWeek = Math.min(104, Math.floor(daysSinceStart / 7) + 1);
+            
+            return {
+                daysSinceStart,
+                expectedWeek,
+                actualWeek: currentWeek,
+                isAhead: currentWeek > expectedWeek,
+                isBehind: currentWeek < expectedWeek,
+                completionRate: Math.round((completedWeeks.length / 104) * 100)
+            };
+        }
+
+        function showProgressStats() {
+            const stats = getWeekStats();
+            const totalPracticeTime = getTotalPracticeTime();
+            const message = `
+📊 Your Progress Stats:
+• Days practicing: ${stats.daysSinceStart}
+• Expected week: ${stats.expectedWeek}
+• Current week: ${stats.actualWeek}
+• Completion: ${stats.completionRate}%
+• Total practice time: ${formatTotalTime(totalPracticeTime)}
+• Status: ${stats.isAhead ? '🚀 Ahead of schedule!' : stats.isBehind ? '⏰ Consider catching up' : '👍 Right on track!'}
+
+Keep up the great work! 🎸
+            `;
+            alert(message);
+        }
+
+        function showPracticeLog() {
+            const sessions = JSON.parse(localStorage.getItem('practiceSessions') || '{}');
+            const last7Days = getLast7Days();
+            
+            let logHtml = `
+                <div class="practice-section">
+                    <h3>📈 Practice Log - Last 7 Days</h3>
+                    <div style="margin: 1rem 0;">
+            `;
+            
+            let totalWeekTime = 0;
+            last7Days.forEach(date => {
+                const dayTime = sessions[date] || 0;
+                totalWeekTime += dayTime;
+                const formattedTime = formatTime(dayTime);
+                const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+                
+                logHtml += `
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; border-bottom: 1px solid #eee;">
+                        <span>${dayName} - ${date}</span>
+                        <span style="font-weight: bold; color: ${dayTime > 0 ? '#27ae60' : '#6c757d'};">
+                            ${formattedTime || 'No practice'}
+                        </span>
+                    </div>
+                `;
+            });
+            
+            logHtml += `
+                    </div>
+                    <div style="margin-top: 1rem; padding: 1rem; background: #e8f5e8; border-radius: 6px;">
+                        <strong>Weekly Total: ${formatTime(totalWeekTime)}</strong><br>
+                        <small>Average: ${formatTime(Math.floor(totalWeekTime / 7))} per day</small>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="nav-btn" style="margin-top: 1rem;">Close</button>
+                </div>
+            `;
+            
+            // Show the log in a modal-like overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.7); z-index: 10000; 
+                display: flex; align-items: center; justify-content: center;
+                padding: 1rem;
+            `;
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white; border-radius: 8px; max-width: 500px; width: 100%;
+                max-height: 80vh; overflow-y: auto; padding: 0;
+            `;
+            modal.innerHTML = logHtml;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            // Close on overlay click
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.remove();
+                }
+            });
+        }
+
+        function getLast7Days() {
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                days.push(date.toDateString());
+            }
+            return days;
+        }
+
+        function getTotalPracticeTime() {
+            const sessions = JSON.parse(localStorage.getItem('practiceSessions') || '{}');
+            return Object.values(sessions).reduce((total, time) => total + time, 0);
+        }
+
+        function formatTotalTime(totalSeconds) {
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            } else {
+                return `${minutes}m`;
+            }
+        }
+
+        function formatTime(seconds) {
+            if (seconds === 0) return null;
+            const minutes = Math.floor(seconds / 60);
+            if (minutes >= 60) {
+                const hours = Math.floor(minutes / 60);
+                const remainingMinutes = minutes % 60;
+                return `${hours}h ${remainingMinutes}m`;
+            }
+            return `${minutes}m`;
+        }
+
+        // Clean up timers when leaving page
+        window.addEventListener('beforeunload', () => {
+            Object.values(activeTimers).forEach(timer => {
+                if (timer.interval) {
+                    clearInterval(timer.interval);
+                }
+            });
+            
+            if (sessionStartTime) {
+                endSession();
+            }
+        });
+            const progressData = {
+                completedWeeks: completedWeeks,
+                currentWeek: currentWeek,
+                totalProgress: Math.round((completedWeeks.length / 104) * 100),
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(progressData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'guitar-curriculum-progress.json';
+            link.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        // Import progress function
+        function importProgress(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const progressData = JSON.parse(e.target.result);
+                    completedWeeks = progressData.completedWeeks || [];
+                    currentWeek = progressData.currentWeek || 1;
+                    localStorage.setItem('completedWeeks', JSON.stringify(completedWeeks));
+                    updateProgress();
+                    alert('Progress imported successfully!');
+                } catch (error) {
+                    alert('Error importing progress file.');
+                }
+            };
+            reader.readAsText(file);
+        }
     </script>
 </body>
 </html>
