@@ -1910,31 +1910,261 @@
         // Complete Week data structure with all 104 weeks
         const weekData = {
             1: {
-                title: "Week 1: Basic Setup & E Major Chord",
+                title: "Week 1: Guitar Fundamentals & E Major Chord",
                 subtitle: "Foundation Building - Getting Started",
                 practices: [
                     {
-                        time: "Setup & Posture (5 minutes)",
-                        description: "Guitar strap height, sitting/standing position, pick grip (hold between thumb and index finger, firm but not tense)"
+                        time: "Guitar Setup & Posture (5 minutes)",
+                        description: `
+                            <strong>Sitting Position:</strong><br>
+                            • Sit in straight-back chair with feet flat on floor<br>
+                            • Rest guitar on your right leg (left leg if left-handed)<br>
+                            • Guitar body should be vertical, not tilted<br>
+                            • Back straight, shoulders relaxed<br><br>
+                            
+                            <strong>Standing Position:</strong><br>
+                            • Adjust strap so guitar hangs comfortably at waist level<br>
+                            • Guitar should feel balanced and secure<br>
+                            • Avoid strap too high (looks awkward) or too low (hard to play)<br><br>
+                            
+                            <strong>Pick Grip:</strong><br>
+                            • Hold pick between thumb and index finger<br>
+                            • About 1/3 of pick should extend beyond fingers<br>
+                            • Firm grip but not death grip - stay relaxed<br>
+                            • Pick should be parallel to strings when striking
+                        `
                     },
                     {
-                        time: "Fretting Hand Exercise (5 minutes)",
-                        description: "One finger per fret exercise (1st finger 1st fret, 2nd finger 2nd fret, etc.) on 6th string"
+                        time: "Guitar Anatomy & Tuning Check (4 minutes)",
+                        description: `
+                            <strong>Learn Your Guitar:</strong><br>
+                            • Strings (low to high): E-A-D-G-B-E<br>
+                            • Frets: Metal bars that divide the neck<br>
+                            • Fretboard: The wooden surface with frets<br>
+                            • Headstock: Where tuning pegs are located<br><br>
+                            
+                            <strong>Basic Tuning Check:</strong><br>
+                            • Use the built-in tuner above or a tuner app<br>
+                            • Each string should match its reference pitch<br>
+                            • If wildly out of tune, ask for help - don't force it<br>
+                            • Good tuning is essential for everything sounding right
+                        `
                     },
                     {
-                        time: "E Major Chord (10 minutes)",
-                        description: "Finger placement: 1st finger 3rd fret 5th string, 2nd finger 2nd fret 4th string, 3rd finger 1st fret 3rd string<br>Practice: 4 beats hold, 4 beats rest, repeat 20 times<br>Check each string rings clearly"
+                        time: "Fretting Hand Foundation (6 minutes)",
+                        description: `
+                            <strong>Thumb Position:</strong><br>
+                            • Thumb goes on back of neck, roughly behind 2nd finger<br>
+                            • Don't wrap thumb around neck (common beginner mistake)<br>
+                            • Thumb provides support and leverage<br><br>
+                            
+                            <strong>Finger Positioning:</strong><br>
+                            • Fingers should arch/curve to avoid touching other strings<br>
+                            • Press just behind the fret wire (not on top of it)<br>
+                            • One finger per fret rule: 1st finger=1st fret, 2nd finger=2nd fret, etc.<br><br>
+                            
+                            <strong>Exercise:</strong><br>
+                            • Practice placing 1st finger on 1st fret, 6th string<br>
+                            • Then 2nd finger on 2nd fret, same string<br>
+                            • Continue with 3rd and 4th fingers<br>
+                            • Press firmly enough to get clean sound, not harder
+                        `
                     },
                     {
-                        time: "Cool Down (5 minutes)",
-                        description: "Gentle finger stretches, shake out tension"
+                        time: "E Major Chord Mastery (8 minutes)",
+                        description: `
+                            <strong>Finger Placement (see diagram above):</strong><br>
+                            • 1st finger: 1st fret, 3rd string (G string)<br>
+                            • 2nd finger: 2nd fret, 5th string (A string)<br>
+                            • 3rd finger: 2nd fret, 4th string (D string)<br>
+                            • 1st, 2nd, and 6th strings are played open (no fingers)<br><br>
+                            
+                            <strong>Practice Method:</strong><br>
+                            • Place all three fingers simultaneously<br>
+                            • Strum all 6 strings slowly<br>
+                            • Listen - every string should ring clearly<br>
+                            • Hold chord for 4 beats, then release<br>
+                            • Repeat 10-15 times<br><br>
+                            
+                            <strong>Common Problems & Solutions:</strong><br>
+                            • Muted strings: Arch fingers higher, avoid touching other strings<br>
+                            • Buzzing: Press firmer, check finger placement behind frets<br>
+                            • Sore fingertips: Normal! Take breaks, build up gradually
+                        `
+                    },
+                    {
+                        time: "Cool Down & Hand Care (2 minutes)",
+                        description: `
+                            <strong>Gentle Stretching:</strong><br>
+                            • Gently stretch fingers and wrists<br>
+                            • Make a fist, then spread fingers wide<br>
+                            • Rotate wrists slowly in both directions<br><br>
+                            
+                            <strong>Hand Health Tips:</strong><br>
+                            • Never practice through pain<br>
+                            • Fingertip soreness is normal, joint pain is not<br>
+                            • Take breaks every 15-20 minutes when starting<br>
+                            • Your fingertips will toughen up in 2-3 weeks
+                        `
                     }
                 ],
-                goals: "Clean E major chord, proper posture established",
-                issues: "Muted strings (press harder, curve fingers), buzzing (check finger placement)",
+                goals: "Clean E major chord with all strings ringing clearly, proper guitar posture and pick grip established, understanding of basic guitar anatomy",
+                issues: `
+                    <strong>Muted Strings:</strong> Most common issue - curve fingers more, avoid touching adjacent strings<br>
+                    <strong>Buzzing Sounds:</strong> Press firmer just behind fret wire, check finger placement<br>
+                    <strong>Finger Pain:</strong> Normal for beginners - take breaks, build up gradually<br>
+                    <strong>Can't Reach Frets:</strong> Check guitar size, adjust strap height, consider smaller guitar if you're petite<br>
+                    <strong>Pick Keeps Slipping:</strong> Try different pick thickness, adjust grip pressure
+                `,
                 chords: ['E major'],
-                totalTime: "20-25 minutes"
-            },
+                songs: [
+                    {
+                        title: "Wild Thing - The Troggs",
+                        description: "Classic 3-chord song: E-A-D-A (you'll learn A and D next week!)",
+                        chordsUsed: "E major (this week), A major (week 2), D major (week 3)",
+                        difficulty: "Beginner",
+                        youtubeSearch: "wild thing troggs guitar tutorial beginner",
+                        spotifySearch: "Wild Thing The Troggs",
+                        notes: "Perfect first song - simple chord progression, forgiving timing"
+                    },
+                    {
+                        title: "Eleanor Rigby - The Beatles",
+                        description: "Uses E minor (very similar to E major - just remove one finger!)",
+                        chordsUsed: "E minor, C major",
+                        difficulty: "Beginner",
+                        youtubeSearch: "eleanor rigby guitar tutorial easy",
+                        spotifySearch: "Eleanor Rigby The Beatles",
+                        notes: "Great for practicing steady strumming, beautiful melody"
+                    }
+                ],
+                equipment: [
+                    {
+                        item: "Electric Guitar",
+                        necessity: "Essential",
+                        notes: "Any electric guitar will work - don't worry about brand or price yet",
+                        budget: "$100-300 used, $150-400 new",
+                        recommendations: "Yamaha Pacifica, Squier Classic Vibe, Epiphone Les Paul"
+                    },
+                    {
+                        item: "Guitar Amplifier",
+                        necessity: "Essential", 
+                        notes: "10-15 watts perfect for home practice",
+                        budget: "$50-150",
+                        recommendations: "Fender Frontman 10G, Boss Katana Mini, Orange Crush 12"
+                    },
+                    {
+                        item: "Guitar Cable",
+                        necessity: "Essential",
+                        notes: "Standard 1/4\" instrument cable, 10-15 feet ideal",
+                        budget: "$10-25",
+                        recommendations: "Any reliable brand - Mogami, Planet Waves, Fender"
+                    },
+                    {
+                        item: "Guitar Picks",
+                        necessity: "Essential",
+                        notes: "Medium thickness (0.73mm) recommended for beginners",
+                        budget: "$5-10 for variety pack",
+                        recommendations: "Fender celluloid, Dunlop Tortex, get several thicknesses"
+                    },
+                    {
+                        item: "Guitar Strap",
+                        necessity: "Highly Recommended",
+                        notes: "Essential for standing practice and performance",
+                        budget: "$10-30",
+                        recommendations: "Adjustable length, comfortable padding, secure locks"
+                    }
+                ],
+                practiceNotes: `
+                    <strong>Quality Over Quantity:</strong> 15 minutes of focused practice beats 2 hours of distracted noodling.<br><br>
+                    
+                    <strong>Consistency is Key:</strong> Practice daily, even if just 10 minutes. Your muscle memory develops through repetition.<br><br>
+                    
+                    <strong>Patience with Progress:</strong> Everyone learns at different speeds. Some people get E major in day 1, others need a week. Both are normal!<br><br>
+                    
+                    <strong>Focus Points This Week:</strong><br>
+                    • Clean E major chord (every string rings)<br>
+                    • Comfortable guitar position<br>
+                    • Proper pick grip and thumb placement<br>
+                    • Building initial finger strength and calluses<br><br>
+                    
+                    <strong>Common Beginner Frustrations:</strong><br>
+                    • "My fingers don't fit" - They will! Hand flexibility improves quickly<br>
+                    • "It sounds terrible" - Everyone's first attempts sound rough<br>
+                    • "My fingers hurt" - Calluses develop in 2-3 weeks<br>
+                    • "I can't get it clean" - Keep practicing, muscle memory takes time
+                `,
+                techniques: [
+                    {
+                        name: "Basic Fretting",
+                        description: "Pressing strings cleanly behind frets",
+                        tips: "Press just behind fret wire, curve fingers, use fingertips not pads"
+                    },
+                    {
+                        name: "Chord Formation",
+                        description: "Placing multiple fingers simultaneously for chords", 
+                        tips: "Think of chord as one shape, place all fingers together, not one at a time"
+                    },
+                    {
+                        name: "Pick Holding",
+                        description: "Proper pick grip for clear tone",
+                        tips: "Firm but relaxed, pick parallel to strings, about 1/3 extending past fingers"
+                    }
+                ],
+                troubleshooting: [
+                    {
+                        problem: "E major chord sounds muted or buzzy",
+                        solutions: [
+                            "Check finger placement - press just behind fret wire, not on top",
+                            "Curve fingers more to avoid touching other strings", 
+                            "Press firmer (but don't overdo it)",
+                            "Make sure thumb is behind neck providing support",
+                            "Check that you're using fingertips, not finger pads"
+                        ]
+                    },
+                    {
+                        problem: "Fingers won't stretch to reach frets",
+                        solutions: [
+                            "Check guitar size - consider 3/4 size if you're petite",
+                            "Adjust strap height or sitting position",
+                            "Hand flexibility improves with practice - be patient",
+                            "Make sure thumb isn't wrapped around neck",
+                            "Consider lighter gauge strings for easier pressing"
+                        ]
+                    },
+                    {
+                        problem: "Pick keeps slipping or flying away",
+                        solutions: [
+                            "Try different pick thickness (medium 0.73mm recommended)",
+                            "Check grip - firm but not death grip",
+                            "Make sure hands aren't sweaty",
+                            "Try picks with textured surface for better grip",
+                            "Practice pick grip without guitar first"
+                        ]
+                    }
+                ],
+                theory: [
+                    {
+                        concept: "Chord",
+                        definition: "Three or more notes played simultaneously",
+                        application: "E major chord contains the notes E, G#, and B"
+                    },
+                    {
+                        concept: "Fret",
+                        definition: "Metal bars that divide the guitar neck into semitone intervals",
+                        application: "Each fret raises the pitch by one semitone (half-step)"
+                    },
+                    {
+                        concept: "Open String",
+                        definition: "String played without pressing any frets",
+                        application: "E major uses three open strings (E, B, E) and three fretted notes"
+                    }
+                ],
+                nextWeekPrep: "Next week we'll learn A major chord and practice our first chord changes. The transition from E major to A major is one of the most important chord changes in guitar!",
+                totalTime: "25 minutes",
+                weekNumber: 1,
+                phase: 1,
+                milestone: false
+            }
             2: {
                 title: "Week 2: A Major Chord & First Changes",
                 subtitle: "Foundation Building - Getting Started",
