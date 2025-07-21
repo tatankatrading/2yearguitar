@@ -5349,11 +5349,9 @@
                     <div class="week-subtitle">${data.subtitle}</div>
                 </div>
 
-                ${createTimerSettings()}
 
                 ${createMetronomeWidget()}
 
-                ${weekNumber === 1 ? createGuitarTuner() : ''}
 
                 ${data.chords ? createChordDiagrams(data.chords) : ''}
 
@@ -5479,26 +5477,6 @@
             return tips[weekNumber] || null;
         }
 
-        function createTimerSettings() {
-            return `
-                <div class="timer-settings">
-                    <h5>⏲️ Quick Timer</h5>
-                    <p>Start a practice timer for any duration:</p>
-                    <div class="timer-presets">
-                        <button class="preset-btn" onclick="startQuickTimer(5)">5 min</button>
-                        <button class="preset-btn" onclick="startQuickTimer(10)">10 min</button>
-                        <button class="preset-btn" onclick="startQuickTimer(15)">15 min</button>
-                        <button class="preset-btn" onclick="startQuickTimer(20)">20 min</button>
-                        <button class="preset-btn" onclick="startQuickTimer(25)">25 min</button>
-                        <button class="preset-btn" onclick="startQuickTimer(30)">30 min</button>
-                    </div>
-                    <div style="margin-top: 0.5rem;">
-                        <input type="number" id="customTimer" placeholder="Custom minutes" min="1" max="120" style="width: 120px; padding: 0.3rem; margin-right: 0.5rem;">
-                        <button class="timer-btn" onclick="startCustomTimer()">Start Custom</button>
-                    </div>
-                </div>
-            `;
-        }
 
         function createMetronomeWidget() {
             return `
@@ -5531,25 +5509,6 @@
             `;
         }
 
-        function createGuitarTuner() {
-            return `
-                <div class="practice-section" style="background: linear-gradient(135deg, #fd79a8, #e84393);">
-                    <h4 style="color: white; margin-bottom: 1rem;">🎼 Guitar Tuner</h4>
-                    <div style="color: white;">
-                        <p style="margin-bottom: 1rem;">Click on a string to hear the reference pitch:</p>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
-                            <button onclick="playReferencePitch(82.41)" class="timer-btn">E (Low)</button>
-                            <button onclick="playReferencePitch(110.00)" class="timer-btn">A</button>
-                            <button onclick="playReferencePitch(146.83)" class="timer-btn">D</button>
-                            <button onclick="playReferencePitch(196.00)" class="timer-btn">G</button>
-                            <button onclick="playReferencePitch(246.94)" class="timer-btn">B</button>
-                            <button onclick="playReferencePitch(329.63)" class="timer-btn">E (High)</button>
-                        </div>
-                        <p style="font-size: 0.9rem; opacity: 0.9;">Tune each string to match the reference pitch. Use a physical tuner for more precision.</p>
-                    </div>
-                </div>
-            `;
-        }
 
         function createChordDiagrams(chords) {
             return `
@@ -5662,30 +5621,6 @@
         function stopTimer(timerId) {
             if (activeTimers[timerId]) {
                 activeTimers[timerId].stop();
-            }
-        }
-
-        function startQuickTimer(minutes) {
-            const timerId = `quick-${Date.now()}`;
-            const timer = new PracticeTimer(timerId, minutes, () => {
-                showMessage(`${minutes}-minute timer completed!`, 'success');
-            });
-            
-            activeTimers[timerId] = timer;
-            timer.start();
-            
-            showMessage(`${minutes}-minute timer started!`, 'info');
-        }
-
-        function startCustomTimer() {
-            const input = document.getElementById('customTimer');
-            const minutes = parseInt(input.value);
-            
-            if (minutes && minutes > 0 && minutes <= 120) {
-                startQuickTimer(minutes);
-                input.value = '';
-            } else {
-                showMessage('Please enter a valid duration (1-120 minutes)', 'error');
             }
         }
 
@@ -5806,30 +5741,6 @@
 
         function setBPM(newBPM) {
             metronome.setBPM(newBPM);
-        }
-
-        // Guitar Tuner Functions
-        function playReferencePitch(frequency) {
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.value = frequency;
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 2);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 2);
-            } catch (error) {
-                console.log('Audio not available for tuner');
-                showMessage('Audio not available. Please use a physical tuner.', 'info');
-            }
         }
 
         // Navigation Functions
